@@ -1,0 +1,1195 @@
+/* Base Styles - Consistent with VisionAidHomepage.css and About.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+:root {
+  --color-primary: #3182ce;
+  --color-success: #48bb78;
+  --color-danger: #e53e3e;
+  --color-gray: #718096;
+  --color-dark: #1a202c;
+  --color-light: #f7fafc;
+}
+
+/* Dark mode colors - Consistent with VisionAidHomepage.css and About.css */
+.dark-mode {
+  --bg-primary: #0a1128;
+  --text-primary: #f7fafc;
+  --header-bg: rgba(26, 32, 44, 0.7);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-hover-border: rgba(255, 255, 255, 0.2);
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --hex-color: rgba(102, 204, 255, 0.15); /* Brighter hexagons in dark mode */
+}
+
+/* Light mode colors - Consistent with VisionAidHomepage.css and About.css */
+.light-mode {
+  --bg-primary: #f0f8ff;
+  --text-primary: #1a202c;
+  --header-bg: rgba(255, 255, 255, 0.7);
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --card-hover-border: rgba(0, 0, 0, 0.2);
+  --card-shadow: rgba(0, 0, 0, 0.1);
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease; /* Consistent transition */
+  scroll-behavior: smooth;
+}
+
+.canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* Header Styles - Consistent with VisionAidHomepage.css and About.css */
+.header {
+  position: fixed; /* Fixed position header */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50; /* Ensure header is above other content */
+  backdrop-filter: blur(8px); /* Apply blur effect */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background: var(--header-bg); /* Use header background color variable */
+}
+
+.header-container {
+  max-width: 1200px; /* Max width for content */
+  margin: 0 auto; /* Center the container */
+  padding: 1rem 1rem 1rem 0; /* Padding around content */
+  display: flex;
+  justify-content: space-between; /* Space logo and nav items */
+  align-items: center; /* Vertically align items */
+  gap: 2rem; /* Gap between header items */
+  margin-right: 10px;
+}
+.nav-link {
+  color: #ffffff; /* Default color */
+  text-decoration: none;
+  padding: 10px 15px;
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+}
+
+.nav-link.active {
+  color: #ffcc00; /* Highlight color */
+  border-bottom: 2px solid #ffcc00; /* Underline effect */
+}
+
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: -75px;
+  padding-left: 1rem;
+}
+
+.logo-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-primary);
+}
+
+.logo-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  background: linear-gradient(135deg,
+    rgba(255, 107, 107, 1),
+    rgba(72, 52, 212, 1),
+    rgba(190, 46, 221, 1),
+    rgba(255, 107, 107, 1)
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  animation: colorDiffuse 15s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes colorDiffuse {
+  0%, 100% {
+    background-position: 0% 50%;
+    filter: saturate(1) brightness(1);
+  }
+  25% {
+    background-position: 100% 50%;
+    filter: saturate(1.2) brightness(1.1);
+  }
+  50% {
+    background-position: 50% 100%;
+    filter: saturate(1.4) brightness(1.2);
+  }
+  75% {
+    background-position: 0% 100%;
+    filter: saturate(1.2) brightness(1.1);
+  }
+}
+
+.nav-menu {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--color-primary),
+    var(--color-success)
+  );
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::before {
+  width: 80%;
+}
+
+.nav-link:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* Mode toggle button - Consistent with VisionAidHomepage.css and About.css */
+.mode-toggle {
+  position: fixed;
+  top: 6rem;
+  right: 2rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+              0 0 10px var(--color-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 49;
+  border: 2px solid var(--color-primary);
+}
+
+.toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-primary);
+}
+
+.mode-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+              0 0 15px var(--color-primary);
+}
+
+/* Chatbot Button - Consistent with VisionAidHomepage.css and About.css */
+.chatbot-toggle {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  background: var(--bg-primary); /* Consistent background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 10px var(--color-primary); /* Consistent shadow */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 49;
+  border: 2px solid var(--color-primary); /* Consistent border */
+  width: 3rem; /* Consistent size */
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatbot-toggle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Chatbot Window - Consistent with VisionAidHomepage.css and About.css */
+.chatbot-window {
+  position: fixed;
+  right: 2rem;
+  bottom: 5rem;
+  width: 300px;
+  height: 400px;
+  background: var(--bg-primary);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 48;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 2px solid var(--color-primary);
+  display: flex; /* Enable flexbox for chatbot window */
+  flex-direction: column; /* Stack header, messages, and input vertically */
+}
+
+.chatbot-header {
+  padding: 1.2rem 1rem; /* Slightly increase padding */
+  background: linear-gradient(135deg, var(--color-primary), var(--color-success)); /* Gradient background */
+  border-bottom: 2px solid var(--card-border); /* Thicker border */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-primary); /* Ensure text color is visible */
+  font-weight: 600; /* Make header text bolder */
+}
+
+.chatbot-messages {
+  max-height: calc(100% - 110px); /* Set max height to container height minus header and input height */
+  overflow-y: auto; /* Enable vertical scroll if content overflows */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column; /* Ensure messages stack properly */
+  gap: 0.5rem; /* Spacing between messages */
+  flex-grow: 1; /* Allow messages to take up remaining space */
+}
+
+.chatbot-message.user {
+  background-color: rgba(var(--color-primary-rgb), 0.2); /* Lighter shade of primary color */
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  align-self: flex-end; /* Align user messages to the right */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.chatbot-message.bot {
+  background-color: var(--card-bg); /* Use card background for bot messages */
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  align-self: flex-start; /* Align bot messages to the left */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid var(--card-border); /* Add a border */
+}
+
+.chatbot-input {
+  padding: 1rem;
+  border-top: 2px solid var(--card-border); /* Thicker border */
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--card-bg); /* Input area background */
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Inner shadow for depth */
+}
+
+.chatbot-input input {
+  flex: 1;
+  padding: 0.6rem; /* Adjust padding */
+  border-radius: 0.5rem;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.chatbot-input button {
+  padding: 0.6rem 1.2rem; /* Adjust padding */
+  border-radius: 0.5rem;
+  background: var(--color-success); /* Use success color for send button */
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow */
+  font-weight: 500; /* Slightly bolder text */
+}
+
+/* Projects Page Specific Styles - Adjust hero padding and remove grid styles */
+.projects-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 5rem 2rem 2rem;
+}
+
+.projects-hero {
+  text-align: center;
+  padding: 4rem 2rem; /* Adjusted hero padding */
+  background: linear-gradient(135deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(10px);
+  margin-bottom: 3rem; /* Reduced margin bottom for hero */
+}
+
+.projects-title {
+  font-size: 4rem; /* Larger title size */
+  font-weight: 900; /* Bold font weight */
+  font-family: 'Orbitron', sans-serif; /* Orbitron font */
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 1),
+    rgba(70, 130, 180, 1),
+    rgba(147, 112, 219, 1)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: colorDiffuse 15s ease-in-out infinite;
+}
+
+.projects-subtitle {
+  font-size: 1.5rem;
+  opacity: 0.9;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Filter Tabs - Hidden (no changes needed) */
+.projects-filter {
+  display: none;
+}
+
+/* Projects Grid - Hidden (no changes needed) */
+.projects-grid {
+  display: none;
+}
+
+/* Project Carousel Section - Styling for the carousel container */
+.project-carousel-section {
+  margin-bottom: 4rem;
+  padding: 2rem 0; /* Add padding to the top and bottom of the carousel section */
+}
+
+.project-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the carousel items */
+  gap: 2rem;
+  padding: 2rem;
+  overflow: hidden; /* Ensure carousel items stay within bounds */
+  position: relative; /* For positioning carousel buttons */
+}
+
+.carousel-card {
+  max-width: 800px;
+  width: 100%;
+  cursor: default;
+  margin: 0 1rem; /* Add horizontal margin between carousel cards */
+}
+
+/* Carousel Buttons - Styling for navigation buttons */
+.carousel-button {
+  position: absolute; /* Position buttons relative to carousel */
+  top: 50%;  
+  background: var(--card-bg); /* Card background for buttons */
+  border: none;
+  color: var(--color-primary);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+  opacity: 0.7;
+  padding: 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add subtle shadow to buttons */
+}
+
+.carousel-button:hover {
+  opacity: 1;
+  background-color: var(--color-primary); /* Primary color on hover */
+  color: white; /* White icon color on hover */
+  transform: scale(1.05); /* Keep only scale transform for hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+.carousel-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background-color: var(--card-bg); /* Revert to card background when disabled */
+  color: var(--color-primary); /* Keep primary color but faded */
+}
+
+.carousel-button.prev {
+  left: 1rem; /* Position previous button to the left */
+  transform: translateY(-50%) rotate(180deg); /* Flip icon for prev button */
+}
+
+.carousel-button.next {
+  right: 1rem; /* Position next button to the right */
+  margin-top: -30px;
+}
+
+.carousel-button.next:hover {  
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Adjustments for project card within carousel - Refined card styles for carousel */
+.carousel-card .project-card {
+  cursor: default; /* Ensure default cursor in carousel */
+  padding: 2.5rem; /* Slightly increased padding for carousel cards */
+  border-radius: 1.75rem; /* More rounded corners for carousel cards */
+  box-shadow: 0 10px 40px var(--card-shadow); /* Enhanced shadow for carousel cards */
+}
+
+.carousel-card .project-card:hover {
+  transform: scale(1.01); /* Subtle scale on hover in carousel */
+  box-shadow: 0 12px 45px var(--card-shadow); /* Slightly enhanced shadow on carousel card hover */
+  border-color: var(--card-hover-border);
+}
+
+.carousel-card .project-description {
+  margin-bottom: 2.5rem; /* Increased description margin in carousel */
+  font-size: 1.15rem; /* Slightly larger font size for description in carousel */
+  line-height: 1.8; /* Improved line height for description in carousel */
+}
+
+.carousel-card .project-button,
+.carousel-card .view-details-button {
+  padding: 1rem 2rem; /* Slightly larger buttons in carousel */
+  font-size: 1rem; /* Slightly larger button text in carousel */
+}
+
+/* Ensure "View Details" button text is readable */
+.carousel-card .view-details-button {
+  color: var(--text-primary); /* Set text color to primary text color */
+}
+
+/* Project Details (Expanded Card) */
+.project-details {
+  margin-top: 2rem; /* Increased margin */
+  border-top: 1px solid var(--card-border); /* Card border */
+  padding-top: 2rem; /* Increased padding */
+}
+
+.project-image-container {
+  width: 100%;
+  border-radius: 1rem; /* Rounded image corners */
+  overflow: hidden;
+  margin-bottom: 2rem; /* Increased margin */
+}
+
+.project-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.project-image:hover {
+  transform: scale(1.05);
+}
+
+.project-tech, .project-features, .project-impact {
+  margin-bottom: 2rem; /* Increased margin */
+}
+
+.project-tech h4, .project-features h4, .project-impact h4 {
+  font-size: 1.2rem; /* Slightly larger heading */
+  font-weight: bold; /* Bold heading */
+  margin-bottom: 1.2rem; /* Increased margin */
+  color: var(--text-primary);
+}
+
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem; /* Increased gap */
+}
+
+.tech-tag {
+  background-color: var(--card-bg); /* Card background for tags */
+  color: var(--text-primary); /* Primary text color for tags */
+  font-size: 0.9rem; /* Slightly larger tag text */
+  padding: 0.5rem 1rem; /* Adjusted padding */
+  border-radius: 0.75rem; /* More rounded tags */
+  border: 1px solid var(--card-border); /* Tag border */
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem; /* Increased margin */
+  color: var(--text-primary); /* Primary text color for features */
+  opacity: 0.9;
+}
+
+.feature-icon {
+  color: var(--color-primary);
+  margin-right: 0.75rem; /* Increased margin */
+}
+
+.project-button {
+  background: var(--color-primary); /* Primary color for button */
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.9rem 2rem; /* Adjusted padding */
+  border-radius: 0.75rem; /* More rounded button */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1.5rem; /* Increased margin */
+}
+
+.project-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Call To Action Section - Consistent with VisionAidHomepage.css and About.css card styles */
+.projects-cta {
+  background: var(--card-bg); /* Card background for CTA */
+  border-radius: 2rem; /* Rounded corners */
+  padding: 4rem 2rem; /* Increased padding */
+  margin-bottom: 4rem;
+  text-align: center;
+  color: var(--text-primary); /* Primary text color */
+  box-shadow: 0 8px 32px var(--card-shadow); /* Card shadow */
+  border: 2px solid var(--card-border); /* Card border */
+  backdrop-filter: blur(10px); /* Apply blur effect */
+}
+
+.cta-content {
+  max-width: 900px; /* Increased max width */
+  margin: 0 auto;
+}
+
+.cta-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.cta-description {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  line-height: 1.7; /* Improved line height */
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem; /* Increased gap */
+  flex-wrap: wrap;
+}
+
+.cta-button {
+  padding: 1rem 2.5rem; /* Adjusted padding */
+  border-radius: 0.75rem; /* More rounded buttons */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem; /* Slightly larger button text */
+}
+
+.cta-button.primary {
+  background-color: var(--color-primary); /* Primary color for primary button */
+  color: white;
+  border: none;
+}
+
+.cta-button.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button.secondary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary); /* Primary border for secondary button */
+  color: var(--color-primary); /* Primary color for secondary button text */
+}
+
+.cta-button.secondary:hover {
+  background-color: rgba(var(--color-primary), 0.1); /* Light primary background on hover */
+  color: var(--color-primary);
+  transform: translateY(-3px);
+}
+
+/* Footer Styles - Consistent with VisionAidHomepage.css and About.css */
+.footer {
+  background: var(--header-bg); /* Consistent footer background */
+  padding: 4rem 0 1rem;
+  color: var(--text-primary);
+  margin-top: 4rem;
+  border-top: 1px solid var(--card-border); /* Consistent border */
+  backdrop-filter: blur(8px);
+}
+
+.footer-container {
+  max-width: 1200px; /* Consistent max width */
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 3rem;
+}
+
+.footer-section h3, .footer-section h4 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-weight: bold; /* Bold font weight for footer titles */
+}
+
+.footer-title {
+  font-size: 1.25rem;
+  margin-top: 0;
+}
+
+.footer-section p {
+  margin-bottom: 1rem;
+  line-height: 1.7; /* Improved line height */
+  opacity: 0.9;
+}
+
+.social-icons {
+  display: flex;
+  gap: 1.25rem; /* Increased gap */
+  margin-top: 1.5rem;
+  justify-content: flex-start; /* Align social icons to start */
+}
+
+.social-icon {
+  width: 2.75rem; /* Larger social icon size */
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--card-bg); /* Card background for social icons */
+  color: var(--text-primary);
+  font-size: 1.3rem; /* Larger social icon font size */
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-3px);
+  color: var(--color-primary);
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.footer-link {
+  color: var(--text-primary);
+  opacity: 0.8;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--color-primary);
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.newsletter-form {
+  display: flex;
+  margin-top: 1.5rem; /* Increased margin */
+}
+
+.newsletter-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--card-border); /* Card border for input */
+  border-radius: 0.75rem 0 0 0.75rem; /* More rounded input corners */
+  background-color: var(--bg-primary); /* Consistent background */
+  color: var(--text-primary);
+  outline: none;
+}
+
+.newsletter-button {
+  background: var(--color-primary); /* Primary color for button */
+  border: none;
+  color: white;
+  border-radius: 0 0.75rem 0.75rem 0; /* More rounded button corners */
+  padding: 0.75rem 1.5rem; /* Adjusted padding */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.newsletter-button:hover {
+  opacity: 0.9;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding: 2rem 0; /* Increased padding */
+  background-color: var(--bg-primary); /* Consistent background */
+  font-size: 0.9rem;
+  opacity: 0.8;
+  border-top: 1px solid var(--card-border); /* Consistent border */
+  margin-top: 2rem; /* Increased margin */
+}
+
+/* Responsive Adjustments - Consistent breakpoints */
+@media (max-width: 1024px) {
+  .projects-title {
+    font-size: 3rem;
+  }
+
+  .projects-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav-menu {
+    width: 100%;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .nav-link {
+    padding: 0.5rem;
+  }
+
+  .projects-filter {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .filter-button {
+    flex-shrink: 0;
+  }
+
+  .projects-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .cta-title {
+    font-size: 2rem;
+  }
+
+  .stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .footer-container {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    padding: 0 1rem;
+  }
+
+  .social-icons {
+    justify-content: center;
+  }
+
+  .footer-section {
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .projects-title {
+    font-size: 2.5rem;
+  }
+
+  .projects-subtitle {
+    font-size: 1rem;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+  }
+
+  .chatbot-window {
+    width: calc(100% - 4rem);
+    right: 2rem;
+  }
+
+  .projects-hero {
+    padding: 4rem 1rem;
+  }
+
+  .projects-container {
+    padding-top: 4rem;
+  }
+}
+
+/* Animations - Consistent animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Additional Enhancements - Consistent dark mode rgb */
+.dark-mode {
+  --bg-primary-rgb: 10, 17, 40;
+}
+
+.light-mode {
+  --bg-primary-rgb: 240, 248, 255;
+}
+
+/* Glassmorphism effects for cards in dark mode - Consistent glassmorphism */
+.dark-mode .project-card,
+.dark-mode .projects-cta,
+.dark-mode .project-stats {
+  background: rgba(20, 32, 64, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 204, 255, 0.1);
+}
+
+/* Subtle hover effects for light mode - Consistent hover effect */
+.light-mode .project-card:hover {
+  border-bottom: 3px solid var(--color-primary);
+}
+
+/* Custom scrollbar - Consistent scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Fix: Ensure next button also stays still on hover - remove translateY from next button hover specifically if it was added accidentally */
+.carousel-button.next:hover {
+  transform: scale(1.05); /* Keep only scale transform for next button hover - REMOVE translateY if present */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Project Status Styles - Adjust text scaling, add outline, and reduce size */
+.project-status {
+  display: inline-flex;
+  padding: 0.5rem 0.9rem;
+  border-radius: 1.2rem;
+  top: 2.0rem;
+  right: 1rem;
+  position: absolute;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif; /* Updated Font */
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--light);
+  background-color: var(--color-gray);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: pulse-green 2s infinite alternate;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+  transform: scale(1);
+  text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black;
+}
+
+.project-status::before {
+  content: '';
+  position: relative;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif; /* Updated Font */
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  width: 0.6rem; /* Slightly smaller dot */
+  height: 0.6rem; /* Slightly smaller dot */
+  background-color: inherit;
+  border-radius: 50%;
+  margin-right: 0.4rem; /* Adjusted margin */
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8); /* Slightly reduced glow */
+  animation: status-glow 1.5s infinite alternate;
+}
+
+@keyframes status-glow {
+  0% {
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8); /* Slightly reduced glow */
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9); /* Slightly reduced max glow */
+  }
+}
+
+@keyframes pulse-green {
+  0% {
+    transform: scale(1); /* Starting scale remains the same */
+    /* Increased shadow intensity and range */
+    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); /* Increased starting opacity */
+  }
+  100% {    
+    box-shadow: 0 0 0 15px rgba(72, 187, 120, 0); /* Increased shadow spread (15px) */
+  }
+}
+
+/* Increased glow strength for active status button */
+.project-status.active {
+  background-color: var(--color-success);
+  /* Increased box-shadow strength and range */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 12px rgba(72, 187, 120, 0.8); /* Increased shadow values */
+}
+
+.project-status.active::before {
+  background-color: var(--color-light);
+  /* Increased box-shadow strength for the dot glow */
+  box-shadow: 0 0 8px var(--color-light); /* Increased glow value for dot */
+}
+
+.project-status.development {
+  background-color: var(--color-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(49, 130, 206, 0.6); /* Slightly reduced development shadow */
+}
+
+.project-status.development::before {
+  background-color: var(--color-light);
+  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced development dot glow */
+}
+
+.project-status.planning {
+  background-color: var(--color-gray);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(113, 128, 150, 0.6); /* Slightly reduced planning shadow */
+}
+
+.project-status.planning::before {
+  background-color: var(--color-light);
+  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced planning dot glow */
+}
+
+.project-status.research {
+  background-color: var(--color-warning);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(245, 158, 11, 0.6); /* Slightly reduced research shadow */
+}
+
+.project-status.research::before {
+  background-color: var(--color-light);
+  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced research dot glow */
+}
+
+/* Project Benefits Section - Overlapping Cards Layout - Enhanced Overlap */
+.project-benefits-section {
+  padding: 4rem 0;
+  background: var(--card-bg);
+  border-radius: 2rem;
+  margin: 4rem auto;
+  max-width: 1200px;
+  position: relative;
+  overflow: visible; /* Make sure overflow is visible */
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.benefits-heading {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+  color: var(--text-primary);
+}
+
+.benefits-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Slightly reduced gap to enhance overlap */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+}
+
+.benefit-card {
+  padding: 2rem;
+  background: var(--bg-primary);
+  border-radius: 1.5rem;
+  text-align: left; /* Align text to the left within the card */
+  box-shadow: 0 8px 32px var(--card-shadow);
+  border: 1px solid var(--card-border);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0.3s ease; /* Smooth transitions for hover */
+  width: 98%; /* Slightly wider cards to enhance overlap */
+  max-width: 780px; /* Adjusted max-width */
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: -2.5rem; /* Increased negative margin for more pronounced overlap */
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+  border-top: 2px solid var(--card-border); /* Added top border to visually separate cards */
+}
+
+/* Style for the very first card to ensure it looks correct */
+.benefits-container > .benefit-card:first-child {
+  margin-top: 2rem; /* Add top margin to the first card */
+  margin-bottom: -2.5rem; /* Keep negative bottom margin for overlap */
+  border-top: none; /* Remove top border for the first card so it doesn't have double border at the top */
+}
+
+.benefit-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 50px var(--card-shadow); /* Increased shadow on hover */
+  z-index: 2;
+}
+
+/* Icon container on the left */
+.benefit-icon-container {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+  width: 4rem; /* Adjusted icon container size */
+  height: 4rem;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 1.5rem 0 0; /* Margin to the right of the icon */
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0; /* Prevent icon container from shrinking */
+}
+
+.benefit-icon {
+  font-size: 2rem; /* Adjusted icon size */
+}
+
+.benefit-content {
+  flex: 1; /* Take remaining space for text content */
+}
+
+.benefit-title {
+  font-size: 1.8rem; /* Adjusted title size */
+  font-weight: 900;
+  font-family: 'Poppins', sans-serif; /* Changed font-family to Poppins */
+  margin-bottom: 0.5rem; /* Reduced title margin */
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 1),
+    rgba(70, 130, 180, 1),
+    rgba(147, 112, 219, 1)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: colorDiffuse 15s ease-in-out infinite; /* Optional: Keep animation or remove if it's too much */
+  color: var(--text-primary); /* Fallback color if gradient fails or for non-webkit browsers */
+  text-align: left; /* Left align title */
+}
+
+.benefit-description {
+  color: var(--text-primary);
+  opacity: 0.9;
+  font-size: 1rem; /* Adjusted description size */
+}
+
+/* No changes needed for even/odd card alternation in this layout, if you've removed it */
+
+/* Responsive adjustments for smaller screens - important to reset overlap here */
+@media (max-width: 768px) {
+  .benefits-container {
+    gap: 2rem;
+  }
+  .benefit-card {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 1rem; /* Reset negative margin for no overlap on smaller screens */
+    padding: 2rem;
+    z-index: 1;
+    box-shadow: 0 8px 32px var(--card-shadow);
+    border-top: none; /* Remove top border on smaller screens */
+  }
+
+  /* Reset top margin for the first card on smaller screens */
+  .benefits-container > .benefit-card:first-child {
+    margin-top: 0; /* Reset top margin for the first card */
+  }
+
+  .benefit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 35px var(--card-shadow);
+    z-index: 2;
+  }
+
+  .benefit-icon-container {
+    margin: 0 auto 1.5rem; /* Center icon and add margin below on smaller screens */
+    width: 5rem; /* Restore icon container size on smaller screens */
+    height: 5rem;
+  }
+  .benefit-title {
+    text-align: center; /* Center title on smaller screens */
+    font-size: 2.05rem; /* Restore title size on smaller screens */
+  }
+}
