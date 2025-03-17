@@ -338,6 +338,10 @@ const Projects: React.FC = () => {
     );
   };
 
+  const handleChatClose = () => {
+    setIsChatOpen(false);
+  };
+
   return (
     <div className={isDarkMode ? 'dark-mode' : 'light-mode'}>
       <canvas ref={canvasRef} className="canvas-container" />
@@ -345,14 +349,14 @@ const Projects: React.FC = () => {
       
       <button
         className="chatbot-toggle"
-        onClick={() => setIsChatOpen(!isChatOpen)}
+        onClick={() => setIsChatOpen(true)}
       >
         <img src={chatbotImageUrl} alt="Chatbot" />
       </button>
       
       <Chatbot
         isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
+        onClose={handleChatClose}
       />
       
       <main className="projects-container">
