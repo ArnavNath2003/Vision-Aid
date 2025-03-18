@@ -84,6 +84,7 @@
   0%, 100% {
     background-position: 0% 50%;
     filter: saturate(1) brightness(1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   25% {
     background-position: 100% 50%;
@@ -358,7 +359,7 @@
   border: 2px solid var(--card-border);
   border-radius: 1.5rem;
   padding: 2.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -383,6 +384,7 @@
   transform: translateY(-10px);
   border-color: var(--card-hover-border);
   box-shadow: 0 15px 40px var(--card-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .project-card:hover::before {

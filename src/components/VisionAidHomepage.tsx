@@ -1,24 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { 
-  Moon, Sun, Globe, Layers, Network, Zap, 
-  ArrowRight, Shield, Clock, Smartphone, Database, Map,
-  MessageCircle, X, Send 
+  Moon, Sun, Globe, Layers, Network,
+  ArrowRight, Shield, Clock, Smartphone, Database, Map
 } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import './VisionAidHomepage.css';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Chatbot from './Chatbot'; // Adjust path if necessary
+import Chatbot from './Chatbot';
 
 const VisionAidHomepage = () => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Change false to true
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [hoveredProject, setHoveredProject] = useState<any>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const chatbotImageUrl = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png";
 
@@ -27,97 +24,168 @@ const VisionAidHomepage = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ 
-      canvas: canvasRef.current as HTMLCanvasElement,
+      canvas: canvasRef.current,
       alpha: true,
       antialias: true 
     });
+    
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Set background color
-    const bgColor = isDarkMode ? new THREE.Color(0x0a1128) : new THREE.Color(0xf0f8ff);
-    scene.background = bgColor;
-
-    // Enhanced lighting
-    const ambientLight = new THREE.AmbientLight(
-      isDarkMode ? 0x404040 : 0xffffff, 
-      isDarkMode ? 0.5 : 0.7
-    );
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-
-    // Create hexagonal grid
-    const createHexagon = (x: number, y: number, size: number) => {
-      const shape = new THREE.Shape();
-      const sides = 6;
-      const radius = size;
-
-      for (let i = 0; i <= sides; i++) {
-        const angle = (i / sides) * Math.PI * 2;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-        if (i === 0) shape.moveTo(x, y);
-        else shape.lineTo(x, y);
-      }
-
-      const geometry = new THREE.ShapeGeometry(shape);
-      const material = new THREE.MeshPhysicalMaterial({
-        color: isDarkMode ? 0x66ccff : 0x3366ff,
-        metalness: 0.9,
-        roughness: 0.1,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.1,
-        transparent: true,
-        opacity: isDarkMode ? 0.15 : 0.1,
-        side: THREE.DoubleSide
-      });
-
-      const hexagon = new THREE.Mesh(geometry, material);
-      hexagon.position.set(x, y, 0);
-      scene.add(hexagon);
-      return hexagon;
+    // Type-safe boundary settings
+    const bounds = {
+      x: { min: -60, max: 60 },
+      y: { min: -40, max: 40 },
+      z: { min: -40, max: 40 }
     };
 
-    // Create grid of hexagons
-    const hexagons: THREE.Mesh[] = [];
-    const gridSize = 8;
-    const hexSize = 1;
-    const spacing = hexSize * 1.8;
+    type Axis = 'x' | 'y' | 'z';
+    const axes: Axis[] = ['x', 'y', 'z'];
 
-    for (let row = -gridSize; row <= gridSize; row++) {
-      const offset = (row % 2) * (spacing / 2);
-      for (let col = -gridSize; col <= gridSize; col++) {
-        const x = col * spacing + offset;
-        const y = row * (spacing * 0.866); // Height of hexagon * spacing
-        hexagons.push(createHexagon(x, y, hexSize));
-      }
+    interface CubeObject {
+      mesh: THREE.Mesh;
+      velocity: THREE.Vector3;
+      initialPosition: THREE.Vector3;
+      rotationSpeed: { x: number; y: number; z: number };
     }
 
-    // Position camera
-    camera.position.z = 15;
+    const cubes: CubeObject[] = [];
 
-    // Animation loop
-    let frame = 0;
+    const cubeCount = 50;
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshPhongMaterial({
+      color: isDarkMode ? 0x4a90e2 : 0x2c5282,
+      transparent: true,
+      opacity: 0.7,
+      specular: 0x444444,
+      shininess: 30
+    });
+
+    // Add lighting
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    // Create and position cubes with wider distribution
+    for (let i = 0; i < cubeCount; i++) {
+      const cube = new THREE.Mesh(geometry, material);
+      
+      // Distribute cubes more evenly across the scene
+      const position = new THREE.Vector3(
+        (Math.random() - 0.5) * (bounds.x.max - bounds.x.min),
+        (Math.random() - 0.5) * (bounds.y.max - bounds.y.min),
+        (Math.random() - 0.5) * (bounds.z.max - bounds.z.min)
+      );
+      
+      cube.position.copy(position);
+      cube.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      const cubeObject = {
+        mesh: cube,
+        velocity: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.1,
+          (Math.random() - 0.5) * 0.1,
+          (Math.random() - 0.5) * 0.1
+        ),
+        initialPosition: position.clone(),
+        rotationSpeed: {
+          x: (Math.random() - 0.5) * 0.02,
+          y: (Math.random() - 0.5) * 0.02,
+          z: (Math.random() - 0.5) * 0.02
+        }
+      };
+
+      cubes.push(cubeObject);
+      scene.add(cube);
+    }
+
+    camera.position.z = 50;
+
+    // Mouse interaction
+    const mouse = new THREE.Vector3();
+    const mouseRaycaster = new THREE.Raycaster();
+    const mousePosition = new THREE.Vector2();
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      mouseRaycaster.setFromCamera(mousePosition, camera);
+      const intersectPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      mouseRaycaster.ray.intersectPlane(intersectPlane, mouse);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+
     const animate = () => {
-      frame = requestAnimationFrame(animate);
-      const time = Date.now() * 0.001;
+      requestAnimationFrame(animate);
 
-      // Animate hexagons
-      hexagons.forEach((hexagon, index) => {
-        const offset = index * 0.1;
-        hexagon.rotation.z = Math.sin(time * 0.2 + offset) * 0.1;
-        hexagon.material.opacity = 0.1 + Math.sin(time + offset) * 0.05;
+      cubes.forEach(cubeObj => {
+        const { mesh, velocity, initialPosition, rotationSpeed } = cubeObj;
+
+        // Natural floating movement
+        velocity.setY(velocity.y + (Math.sin(Date.now() * 0.001) * 0.001));
+        
+        // Apply velocity
+        mesh.position.add(velocity);
+
+        // Rotate
+        mesh.rotation.x += rotationSpeed.x;
+        mesh.rotation.y += rotationSpeed.y;
+        mesh.rotation.z += rotationSpeed.z;
+
+        // Boundary collision - type-safe version
+        axes.forEach((axis) => {
+          const pos = mesh.position[axis];
+          const vel = velocity[axis];
+          const bound = bounds[axis];
+          
+          if (pos <= bound.min || pos >= bound.max) {
+            // Type-safe way to set velocity
+            switch(axis) {
+              case 'x': velocity.setX(vel * -0.8); break;
+              case 'y': velocity.setY(vel * -0.8); break;
+              case 'z': velocity.setZ(vel * -0.8); break;
+            }
+            
+            // Clamp position
+            const clampedPos = Math.max(bound.min, Math.min(bound.max, pos));
+            mesh.position[axis] = clampedPos;
+          }
+        });
+
+        // Mouse interaction
+        const distanceToMouse = mesh.position.distanceTo(mouse);
+        if (distanceToMouse < 30) {  // Increased radius
+          const repulsionForce = mesh.position.clone().sub(mouse);
+          repulsionForce.normalize();
+          // Increased force and adjusted distance scaling
+          repulsionForce.multiplyScalar(1.0 / Math.max(0.1, distanceToMouse * 0.5));
+          velocity.add(repulsionForce);
+        }
+
+        // Apply drag
+        velocity.multiplyScalar(0.98);
+
+        // Return force
+        const returnForce = initialPosition.clone().sub(mesh.position);
+        returnForce.multiplyScalar(0.001);
+        velocity.add(returnForce);
       });
 
-      // Subtle camera movement
-      camera.position.x = Math.sin(time * 0.1) * 0.5;
-      camera.position.y = Math.cos(time * 0.1) * 0.5;
+      // Camera movement
+      camera.position.x = Math.sin(Date.now() * 0.0001) * 2;
+      camera.position.y = Math.cos(Date.now() * 0.0001) * 2;
       camera.lookAt(scene.position);
 
       renderer.render(scene, camera);
@@ -125,30 +193,11 @@ const VisionAidHomepage = () => {
 
     animate();
 
-    // Handle window resize
-    const handleResize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      
-      renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(frame);
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          object.material.dispose();
-        }
-      });
+      window.removeEventListener('mousemove', handleMouseMove);
+      geometry.dispose();
+      material.dispose();
+      cubes.forEach(cube => scene.remove(cube.mesh));
       renderer.dispose();
     };
   }, [isDarkMode]);
@@ -201,7 +250,12 @@ const VisionAidHomepage = () => {
     </header>
   );
 
-  const ProjectModal = ({ project }: { project: any }) => {
+  // Update the interface for ProjectModal props
+  interface ProjectModalProps {
+    project: any;
+  }
+
+  const ProjectModal = ({ project }: ProjectModalProps) => {
     if (!project) return null;
 
     return (
@@ -268,7 +322,7 @@ const VisionAidHomepage = () => {
       <motion.section
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
         viewport={{ once: true, margin: "-100px" }}
         className="features-section"
       >
@@ -301,7 +355,7 @@ const VisionAidHomepage = () => {
       <motion.section
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
         viewport={{ once: true, margin: "-100px" }}
         className="technologies-section"
       >
@@ -402,15 +456,19 @@ const VisionAidHomepage = () => {
     className="project-grid"
     initial={{ y: 50, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    transition={{ delay: 0.3, duration: 0.8 }}
+    transition={{ 
+      delay: 0.3, 
+      duration: 0.8,
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }}
   >
     {projects.map((project, index) => (
       <div
         key={index}
         className="project-card"
         onClick={() => setSelectedProject(project)}
-        onMouseEnter={() => setHoveredProject(project)}
-        onMouseLeave={() => setHoveredProject(null)}
       >
         <div className="project-icon-container">
           {project.icon}
@@ -422,7 +480,11 @@ const VisionAidHomepage = () => {
   </motion.div>
 </section>
 
-        {selectedProject && <ProjectModal project={selectedProject} />}
+        {selectedProject && (
+          <ProjectModal 
+            project={selectedProject}
+          />
+        )}
 
         <KeyFeatures />
         <TechnologiesSection />
