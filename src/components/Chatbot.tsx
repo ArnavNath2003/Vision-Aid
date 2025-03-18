@@ -106,7 +106,29 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
           const displayMessage = response.replace(/navigate:\/\w+/, '').trim();
           setMessages(prev => [...prev, { text: displayMessage, sender: 'bot' }]);
           setTimeout(() => {
-            navigate(`/${route === 'home' ? '' : route}`);
+            // Handle plural variations of routes
+            const routePath = route.toLowerCase();
+            const routeMapping: { [key: string]: string } = {
+              'project': 'projects',
+              'projects': 'projects',
+              'contact': 'contact',
+              'contacts': 'contact',
+              'home': '',
+              'homepage': '',
+              'main': '',
+              'about': 'about'
+            };
+            
+            const finalRoute = routeMapping[routePath];
+            if (finalRoute !== undefined) {
+              navigate(finalRoute ? `/${finalRoute}` : '/');
+            } else {
+              // Handle unknown routes
+              setMessages(prev => [...prev, { 
+                text: "I'm not sure about that page. Available pages are: Home, Projects, About, and Contact.", 
+                sender: 'bot' 
+              }]);
+            }
           }, 1000);
         } else {
           setMessages(prev => [...prev, { text: response, sender: 'bot' }]);
