@@ -468,9 +468,29 @@ const Projects: React.FC = () => {
               )}
               
               {expandedProject !== currentProject.id && (
-                <button className="view-details-button">
-                  View Details
-                </button>
+                <div className="button-container">
+                  <button 
+                    className="view-details-button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Stop event from bubbling up
+                      toggleProjectExpansion(currentProject.id);
+                    }}
+                  >
+                    View Details
+                  </button>
+                  <a 
+                    href="#" // Placeholder link for now
+                    className="try-now-button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent project expansion
+                      e.preventDefault(); // Prevent default anchor behavior
+                      // Later you can add your routing logic here
+                      // For example: router.push(currentProject.projectLink);
+                    }}
+                  >
+                    Try Now
+                  </a>
+                </div>
               )}
             </motion.div>
             <button className="carousel-button next" onClick={goToNextProject}>

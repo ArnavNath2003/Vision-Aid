@@ -943,76 +943,82 @@ body, html {
 /* Project Status Styles - Adjust text scaling, add outline, and reduce size */
 .project-status {
   display: inline-flex;
-  padding: 0.5rem 0.9rem;
-  border-radius: 1.2rem;
+  padding: 0.6rem 1.2rem;  /* Slightly increased padding */
+  border-radius: 2rem;     /* More rounded corners */
   top: 2.0rem;
   right: 1rem;
   position: absolute;
-  font-size: 0.9rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif; /* Updated Font */
-  letter-spacing: 0.7px;
+  font-size: 0.85rem;
+  font-weight: 500;        /* Lighter weight for modern look */
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 1px;     /* Increased letter spacing */
   text-transform: uppercase;
   color: var(--light);
   background-color: var(--color-gray);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);  /* Added glass effect */
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);  /* Subtle inner highlight */
   overflow: hidden;
   animation: pulse-green 2s infinite alternate;
   align-items: center;
   gap: 0.4rem;
   justify-content: center;
   transform: scale(1);
-  text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .project-status::before {
   content: '';
   position: relative;
-  font-size: 0.9rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif; /* Updated Font */
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-  width: 0.6rem; /* Slightly smaller dot */
-  height: 0.6rem; /* Slightly smaller dot */
+  width: 0.5rem;
+  height: 0.5rem;
   background-color: inherit;
   border-radius: 50%;
-  margin-right: 0.4rem; /* Adjusted margin */
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8); /* Slightly reduced glow */
+  margin-right: 0.4rem;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
   animation: status-glow 1.5s infinite alternate;
 }
 
 @keyframes status-glow {
   0% {
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8); /* Slightly reduced glow */
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    transform: scale(1);
   }
   100% {
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9); /* Slightly reduced max glow */
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+    transform: scale(1.1);  /* Added subtle pulse to the dot */
   }
 }
 
 @keyframes pulse-green {
   0% {
-    transform: scale(1); /* Starting scale remains the same */
-    /* Increased shadow intensity and range */
-    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); /* Increased starting opacity */
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6);
   }
   100% {    
-    box-shadow: 0 0 0 15px rgba(72, 187, 120, 0); /* Increased shadow spread (15px) */
+    box-shadow: 0 0 0 15px rgba(72, 187, 120, 0);
   }
 }
 
-/* Increased glow strength for active status button */
 .project-status.active {
-  background-color: var(--color-success);
-  /* Increased box-shadow strength and range */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 12px rgba(72, 187, 120, 0.8); /* Increased shadow values */
+  background: linear-gradient(135deg, 
+    rgba(72, 187, 120, 0.95), 
+    rgba(56, 161, 105, 0.95)
+  );
+  box-shadow: 
+    0 4px 15px rgba(72, 187, 120, 0.3),
+    0 0 0 1px rgba(72, 187, 120, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
 }
 
 .project-status.active::before {
-  background-color: var(--color-light);
-  /* Increased box-shadow strength for the dot glow */
-  box-shadow: 0 0 8px var(--color-light); /* Increased glow value for dot */
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 15px rgba(72, 187, 120, 0.6);
 }
 
 .project-status.development {
@@ -1192,4 +1198,161 @@ body, html {
     text-align: center; /* Center title on smaller screens */
     font-size: 2.05rem; /* Restore title size on smaller screens */
   }
+}
+
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.view-details-button, .try-now-button {
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* View Details Button - Enhanced styling */
+.view-details-button {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.15),
+    rgba(70, 130, 180, 0.15)
+  );
+  color: var(--text-primary);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  backdrop-filter: blur(8px);
+  position: relative;
+  isolation: isolate;
+}
+
+.view-details-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.8),
+    rgba(70, 130, 180, 0.8)
+  );
+  border-radius: 0.85rem; /* Slightly larger than the button to account for border */
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  opacity: 0.3;
+}
+
+.view-details-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.25),
+    rgba(70, 130, 180, 0.25)
+  );
+  color: var(--text-primary);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 15px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(147, 112, 219, 0.3);
+}
+
+.view-details-button:hover::before {
+  opacity: 0.5;
+}
+
+/* Light mode specific adjustments */
+.light-mode .view-details-button {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.2),
+    rgba(70, 130, 180, 0.2)
+  );
+  color: var(--color-dark);
+}
+
+.light-mode .view-details-button:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.3),
+    rgba(70, 130, 180, 0.3)
+  );
+}
+
+/* Dark mode specific adjustments */
+.dark-mode .view-details-button {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.15),
+    rgba(70, 130, 180, 0.15)
+  );
+  color: #e2e8f0;
+}
+
+.dark-mode .view-details-button:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 112, 219, 0.25),
+    rgba(70, 130, 180, 0.25)
+  );
+  color: white;
+}
+
+/* Try Now Button - Gradient with glow effect */
+.try-now-button {
+  background: linear-gradient(135deg, #3182ce, #2c5282);
+  color: white;
+  border: none;
+  box-shadow: 
+    0 4px 15px rgba(49, 130, 206, 0.4),
+    0 0 0 1px rgba(49, 130, 206, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.try-now-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.try-now-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  box-shadow: 
+    0 8px 20px rgba(49, 130, 206, 0.5),
+    0 0 0 1px rgba(49, 130, 206, 0.2),
+    0 0 20px rgba(66, 153, 225, 0.3);
+}
+
+.try-now-button:hover::before {
+  left: 100%;
+}
+
+/* Ensure these styles work within the carousel card */
+.carousel-card .button-container {
+  margin-top: 2rem;
+}
+
+.carousel-card .view-details-button,
+.carousel-card .try-now-button {
+  padding: 1rem 2rem;
+  font-size: 1rem;
 }
