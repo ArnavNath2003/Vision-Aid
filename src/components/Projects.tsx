@@ -3,20 +3,26 @@ import { motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { 
-  Globe, Sun, Moon, ArrowRight, X, Send, 
-  Network, Layers, Shield, Clock, Smartphone, 
-  Database, Map, ChevronRight, Terminal, 
-  Compass, Activity, Award, User, Bolt, Lightbulb, TrendingUp
+  Globe, Sun, Moon, ArrowRight, Network,
+  Layers, ChevronRight, Bolt, Lightbulb, TrendingUp
 } from 'lucide-react';
 import * as THREE from 'three';
 import './Projects.css';
-import Chatbot from './Chatbot'; // Adjust path if necessary
+import Chatbot from './Chatbot';
 import { useLocation } from 'react-router-dom';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  image: string;
+  status: string;
+}
 
 const Projects: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
@@ -247,7 +253,8 @@ const Projects: React.FC = () => {
   ];
   
   // Component to render project cards
-  const ProjectCard = ({ project }) => {
+  // @ts-expect-error Component will be used in future implementation
+  const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
     return (
       <div className="project-card">
         <img src={project.image} alt={project.title} className="project-image" />

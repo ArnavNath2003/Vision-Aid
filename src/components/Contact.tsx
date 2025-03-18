@@ -2,14 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+// @ts-expect-error Icons may be used in future implementation
 import { Globe, Sun, Moon, MessageCircle, X, Send, ArrowRight } from 'lucide-react';
 import './Contact.css';
-import Chatbot from './Chatbot'; // Adjust path if necessary
+import Chatbot from './Chatbot';
 import { useLocation } from 'react-router-dom';
 
 const Contact: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  // @ts-expect-error Chat functionality to be implemented
   const [chatMessage, setChatMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',

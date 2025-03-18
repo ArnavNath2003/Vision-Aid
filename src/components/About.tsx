@@ -2,18 +2,32 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUsers, FaLightbulb, FaHandHoldingHeart, FaEye, FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { Globe, Sun, Moon, MessageCircle, X, Send, ArrowRight } from 'lucide-react';
+import { Globe, Sun, Moon, ArrowRight } from 'lucide-react';
 import './About.css';
-import Chatbot from './Chatbot'; // Adjust path if necessary
+import Chatbot from './Chatbot';
 import { useLocation } from 'react-router-dom';
 
 const About: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
   
   const chatbotImageUrl = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png";
+
+  // Animation variants for smoother transitions
+  const fadeInUp = {
+    initial: { y: 20, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    transition: { duration: 0.5, ease: "easeOut" }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
   useEffect(() => {
     if (isChatOpen && inputRef.current) {
@@ -117,55 +131,81 @@ const About: React.FC = () => {
       <div className="about-container">
         <Header />
         
-        <button
-          className="mode-toggle"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-        >
-          {isDarkMode ? <Sun className="toggle-icon" /> : <Moon className="toggle-icon" />}
-        </button>
-
-        <button
-          className="chatbot-toggle"
-          onClick={() => setIsChatOpen(!isChatOpen)}
-        >
-          <img src={chatbotImageUrl} alt="Chatbot" />
-        </button>
-        
-        <Chatbot
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-        />
-
-        {/* Hero Section */}
-        <motion.section 
-          className="about-hero"
+        <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.3 }}
         >
-          <h1 className="about-title">Our Vision for Accessibility</h1>
-          <p className="about-subtitle">Empowering visually impaired individuals through innovative technology</p>
+          <button
+            className="mode-toggle"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+          >
+            {isDarkMode ? <Sun className="toggle-icon" /> : <Moon className="toggle-icon" />}
+          </button>
+
+          <button
+            className="chatbot-toggle"
+            onClick={() => setIsChatOpen(!isChatOpen)}
+          >
+            <img src={chatbotImageUrl} alt="Chatbot" />
+          </button>
+          
+          <Chatbot
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+          />
+        </motion.div>
+
+        {/* Hero Section - Optimized animation */}
+        <motion.section 
+          className="about-hero"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <motion.h1 
+            className="about-title"
+            {...fadeInUp}
+          >
+            Our Vision for Accessibility
+          </motion.h1>
+          <motion.p 
+            className="about-subtitle"
+            {...fadeInUp}
+            transition={{ delay: 0.1, duration: 0.5 }}
+          >
+            Empowering visually impaired individuals through innovative technology
+          </motion.p>
         </motion.section>
 
-        {/* Mission Section */}
+        {/* Mission Section - Optimized animation */}
         <motion.section 
           className="mission-section"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
         >
-          <div className="mission-content">
+          <motion.div 
+            className="mission-content"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
             <FaEye className="mission-icon" />
             <h2>Our Mission</h2>
             <p>
               To revolutionize the way visually impaired individuals interact with digital content by creating 
               intuitive and accessible solutions that enhance their daily lives and promote independence.
             </p>
-          </div>
+          </motion.div>
         </motion.section>
 
-        {/* Values Section */}
-        <section className="values-section">
+        {/* Values Section - Optimized animation */}
+        <motion.section 
+          className="values-section"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           <h2 className="values-title">Our Core Values</h2>
           <div className="values-grid">
             <motion.div 
@@ -201,7 +241,7 @@ const About: React.FC = () => {
               <p>Enabling independence and confidence through our technology</p>
             </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Timeline Section */}
         <section className="timeline-section">
