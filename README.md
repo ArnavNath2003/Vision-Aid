@@ -26,7 +26,7 @@ VisionAid is a cutting-edge urban infrastructure management platform that levera
 
 - **Frontend**: React 19.0.0 with TypeScript
 - **3D Graphics**: Three.js
-- **Styling**: Tailwind CSS
+- **Styling**: CSS
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
 - **Routing**: React Router DOM
@@ -95,8 +95,9 @@ vision-aid/
 
 ## 👥 Contributors
 
-- [Shichan](https://github.com/shichancoder) - Project Lead & Main Developer
+- [Arnav Nath](https://github.com/shichancoder) - Project Lead & Database Architect
 - [Saksham Jain](https://github.com/saksham-jain177) - Lead Developer & UI/UX Specialist
+- [Aryan Sansi](https://github.com/Aryansansi) - Co-Lead Developer & AI/ML Specialist
 
 Want to contribute? Check out our [Contributing Guidelines](CONTRIBUTING.md).
 
@@ -115,6 +116,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - GitHub: [@shichancoder](https://github.com/shichancoder)
 - GitHub: [@saksham-jain177](https://github.com/saksham-jain177)
+- GitHub: [@Aryansansi](https://github.com/Aryansansi)
 - Project Link: [https://github.com/shichancoder/Vision-Aid](https://github.com/shichancoder/Vision-Aid)
 
 ## 🚀 Roadmap
