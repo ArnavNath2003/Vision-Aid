@@ -193,8 +193,7 @@ const About: React.FC = () => {
             <FaEye className="mission-icon" />
             <h2>Our Mission</h2>
             <p>
-              To revolutionize the way visually impaired individuals interact with digital content by creating 
-              intuitive and accessible solutions that enhance their daily lives and promote independence.
+              We strive to revolutionize urban mobility and public safety by leveraging AI-powered camera systems for efficient traffic management and missing person identification. Our goal is to create smarter, safer cities through innovation and responsible technology.
             </p>
           </motion.div>
         </motion.section>
