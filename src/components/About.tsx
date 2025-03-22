@@ -174,7 +174,7 @@ const About: React.FC = () => {
             {...fadeInUp}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            Empowering visually impaired individuals through innovative technology
+            Making smart traffic and security solutions universally accessible for safer and more connected communities.
           </motion.p>
         </motion.section>
 
@@ -215,7 +215,7 @@ const About: React.FC = () => {
             >
               <FaUsers className="value-icon" />
               <h3>Inclusivity</h3>
-              <p>Creating technology that serves everyone, regardless of their visual abilities</p>
+              <p>Ensuring our technology benefits everyone, regardless of background or circumstance.</p>
             </motion.div>
 
             <motion.div 
@@ -226,7 +226,7 @@ const About: React.FC = () => {
             >
               <FaLightbulb className="value-icon" />
               <h3>Innovation</h3>
-              <p>Continuously pushing boundaries to develop cutting-edge accessibility solutions</p>
+              <p>Continuously pushing the boundaries of AI and smart surveillance to enhance urban infrastructure.</p>
             </motion.div>
 
             <motion.div 
@@ -237,7 +237,7 @@ const About: React.FC = () => {
             >
               <FaHandHoldingHeart className="value-icon" />
               <h3>Empowerment</h3>
-              <p>Enabling independence and confidence through our technology</p>
+              <p> Providing communities and law enforcement with tools to improve safety, mobility, and response efficiency.</p>
             </motion.div>
           </div>
         </motion.section>
@@ -272,7 +272,7 @@ const About: React.FC = () => {
                 }}
               >
                 <h3>Project Inception</h3>
-                <p>Started with a vision to make digital content accessible to all</p>
+                <p>Identifying the need for AI-driven traffic and security solutions.</p>
                 <div className="timeline-dot"></div>
               </motion.div>
             </motion.div>
@@ -341,7 +341,7 @@ const About: React.FC = () => {
                 }}
               >
                 <h3>Future Vision</h3>
-                <p>Expanding our reach and impact in digital accessibility</p>
+                <p>Expanding our reach with continuous improvements, integrating cloud computing, and collaborating with city planners for smarter infrastructure.</p>
                 <div className="timeline-dot"></div>
               </motion.div>
             </motion.div>
@@ -358,8 +358,8 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Dr. Sarah Chen</h3>
-              <p>Lead Researcher</p>
+              <h3>Aryan Sansi</h3>
+              <p>Ai/ML Specialist</p>
             </motion.div>
 
             <motion.div 
@@ -368,8 +368,8 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Alex Rodriguez</h3>
-              <p>AI Specialist</p>
+              <h3>Arnav Nath</h3>
+              <p>Database Architect</p>
             </motion.div>
 
             <motion.div 
@@ -378,8 +378,8 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Maya Patel</h3>
-              <p>Accessibility Expert</p>
+              <h3>Saksham Jain</h3>
+              <p>UI/UX Specialist</p>
             </motion.div>
             <motion.div 
               className="team-member"
@@ -387,8 +387,8 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Alex Rodriguez</h3>
-              <p>AI Specialist</p>
+              <h3>Varghese Joshy</h3>
+              <p>Researcher</p>
             </motion.div>
           </div>
         </section>
