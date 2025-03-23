@@ -96,8 +96,8 @@ vision-aid/
 ## 👥 Contributors
 
 - [Arnav Nath](https://github.com/shichancoder) - Project Lead & Database Architect
-- [Saksham Jain](https://github.com/saksham-jain177) - Lead Developer & UI/UX Specialist
-- [Aryan Sansi](https://github.com/Aryansansi) - Co-Lead Developer & AI/ML Specialist
+- [Saksham Jain](https://github.com/saksham-jain177) - Co-Lead Developer & UI/UX Specialist
+- [Aryan Sansi](https://github.com/Aryansansi) - Lead Developer & AI/ML Specialist
 
 Want to contribute? Check out our [Contributing Guidelines](CONTRIBUTING.md).
 
