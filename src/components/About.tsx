@@ -174,7 +174,7 @@ const About: React.FC = () => {
             {...fadeInUp}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            We envision a world where urban infrastructure is seamlessly accessible to all, breaking barriers and empowering every individual to navigate cities with ease and independence.
+            Empowering visually impaired individuals through innovative technology
           </motion.p>
         </motion.section>
 
@@ -193,7 +193,8 @@ const About: React.FC = () => {
             <FaEye className="mission-icon" />
             <h2>Our Mission</h2>
             <p>
-            VisionAid creates smarter, sustainable cities through AI, optimizing infrastructure for everyone.. 
+              To revolutionize the way visually impaired individuals interact with digital content by creating 
+              intuitive and accessible solutions that enhance their daily lives and promote independence.
             </p>
           </motion.div>
         </motion.section>
@@ -215,7 +216,7 @@ const About: React.FC = () => {
             >
               <FaUsers className="value-icon" />
               <h3>Inclusivity</h3>
-              <p>VisionAid builds smarter, sustainable cities through AI and real-time analytics, optimizing infrastructure for all.</p>
+              <p>Creating technology that serves everyone, regardless of their visual abilities</p>
             </motion.div>
 
             <motion.div 
@@ -226,7 +227,7 @@ const About: React.FC = () => {
             >
               <FaLightbulb className="value-icon" />
               <h3>Innovation</h3>
-              <p>Continuously pushing boundaries to develop cutting-edge accessibility solutions</p>
+              <p>Continuously pushing the boundaries of AI and smart surveillance to enhance urban infrastructure.</p>
             </motion.div>
 
             <motion.div 
@@ -237,7 +238,7 @@ const About: React.FC = () => {
             >
               <FaHandHoldingHeart className="value-icon" />
               <h3>Empowerment</h3>
-              <p>Enabling independence and confidence through our technology</p>
+              <p> Providing communities and law enforcement with tools to improve safety, mobility, and response efficiency.</p>
             </motion.div>
           </div>
         </motion.section>
@@ -272,7 +273,7 @@ const About: React.FC = () => {
                 }}
               >
                 <h3>Project Inception</h3>
-                <p>Started with a vision to make digital content accessible to all</p>
+                <p>Identifying the need for AI-driven traffic and security solutions.</p>
                 <div className="timeline-dot"></div>
               </motion.div>
             </motion.div>
@@ -341,7 +342,7 @@ const About: React.FC = () => {
                 }}
               >
                 <h3>Future Vision</h3>
-                <p>Expanding our reach and impact in digital accessibility</p>
+                <p>Expanding our reach with continuous improvements, integrating cloud computing, and collaborating with city planners for smarter infrastructure.</p>
                 <div className="timeline-dot"></div>
               </motion.div>
             </motion.div>
@@ -358,7 +359,7 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Arnav Nath</h3>
+              <h3>Dr. Sarah Chen</h3>
               <p>Lead Researcher</p>
             </motion.div>
 
@@ -368,7 +369,7 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Saksham Jain</h3>
+              <h3>Alex Rodriguez</h3>
               <p>AI Specialist</p>
             </motion.div>
 
@@ -378,7 +379,7 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Aryan Sansi</h3>
+              <h3>Maya Patel</h3>
               <p>Accessibility Expert</p>
             </motion.div>
             <motion.div 
@@ -387,7 +388,7 @@ const About: React.FC = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="member-avatar"></div>
-              <h3>Varghese Joshi</h3>
+              <h3>Alex Rodriguez</h3>
               <p>AI Specialist</p>
             </motion.div>
           </div>
