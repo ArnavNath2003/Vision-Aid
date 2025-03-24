@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Globe, Sun, Moon, ArrowRight, Network,
   Layers, Bolt, Lightbulb, TrendingUp
@@ -21,16 +21,11 @@ interface Project {
   color: string;
   technologies: string[];
   features: string[];
-  status: string;
-  image: string;
-  metrics?: ProjectMetric[];
-  liveUrl?: string;
+  status: 'active' | 'inactive';
+  metrics: Array<{ value: string; label: string }>;
+  image?: string;
+  liveUrl?: boolean;
   impact?: string;
-}
-
-interface ProjectMetric {
-  value: string | number;
-  label: string;
 }
 
 const Projects: React.FC = () => {
@@ -182,7 +177,14 @@ const Projects: React.FC = () => {
           <h3 className="footer-title">VisionAid</h3>
           <p>Transforming urban infrastructure through intelligent technology.</p>
           <div className="social-icons">
-            <a href="#" className="social-icon"><FaGithub /></a>
+            <a 
+              href="https://github.com/ArnavNath2003/Vision-Aid" 
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaGithub />
+            </a>
             <a href="#" className="social-icon"><FaLinkedin /></a>
             <a href="#" className="social-icon"><FaTwitter /></a>
             <a href="#" className="social-icon"><FaInstagram /></a>
@@ -244,7 +246,7 @@ const Projects: React.FC = () => {
         { value: "5", label: "Pilot Cities" }
       ],
       image: "/images/traffic-system.jpg",
-      liveUrl: "https://example.com/demo",
+      liveUrl: true,
       impact: "Reduced urban traffic congestion by 35% in pilot cities"
     },
     {
@@ -268,12 +270,21 @@ const Projects: React.FC = () => {
         { value: "99.9%", label: "Uptime" }
       ],
       image: "/images/infrastructure.jpg",
-      liveUrl: "https://example.com/infrastructure"
+      liveUrl: true
     },
     // Add more projects with varying heights
   ];
   
   const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
+    const navigate = useNavigate();
+
+    const handleTryNow = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent card click event
+      if (project.id === "urban-traffic") {
+        navigate('/projects/urban-traffic-dynamics');
+      }
+    };
+
     return (
       <motion.div
         className="project-masonry-card"
@@ -337,16 +348,14 @@ const Projects: React.FC = () => {
               View Details
             </motion.button>
             {project.liveUrl && (
-              <motion.a 
-                href={project.liveUrl} 
+              <motion.button 
                 className="try-now-button"
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={handleTryNow}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 Try Now <ArrowRight size={16} />
-              </motion.a>
+              </motion.button>
             )}
           </div>
         </div>
@@ -407,10 +416,6 @@ const Projects: React.FC = () => {
     );
   };
 
-  const handleChatClose = () => {
-    setIsChatOpen(false);
-  };
-
   // Add these breakpoints for the Masonry grid
   const breakpointColumnsObj = {
     default: 3,
@@ -433,7 +438,7 @@ const Projects: React.FC = () => {
       
       <Chatbot
         isOpen={isChatOpen}
-        onClose={handleChatClose}
+        onClose={() => setIsChatOpen(false)}
       />
       
       <main className="projects-container">

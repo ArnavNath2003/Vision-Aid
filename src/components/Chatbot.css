@@ -1,5 +1,6 @@
 /* Chatbot.css */
 
+/* Enhanced chatbot window styles */
 .chatbot-window {
     position: fixed;
     right: 2rem;
@@ -9,40 +10,148 @@
     background: var(--bg-primary);
     border-radius: 1rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    z-index: 1000; /* Increased z-index */
-    border: 2px solid var(--color-primary);
-    transform: translateY(20px) scale(0.95);
+    z-index: 1000;
+    border: 2px solid var(--color-primary);    
+    flex-direction: column;
+    overflow: hidden;
+    display: none;
     opacity: 0;
-    visibility: hidden;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease,
-                visibility 0.3s ease;
-    will-change: transform, opacity, visibility; /* Optimize animations */
-    pointer-events: none; /* Prevent interaction when closed */
+    transform: translateY(20px);
 }
 
 .chatbot-window.open {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-    visibility: visible;
-    pointer-events: all; /* Enable interaction when open */
+    display: flex;
+    animation: fadeIn 0.5s forwards;
 }
 
-.chatbot-window.closed {
-    transform: translateY(20px) scale(0.95);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+.chatbot-window.closing {
+    display: flex !important;
+    animation: fadeOut 0.5s forwards;
 }
 
-/* Ensure the toggle button stays above other content */
+/* Enhanced header styles */
+.chatbot-header {
+    padding: 1.2rem 1rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+    border-bottom: 2px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Add these styles for the close button */
+.chatbot-header button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.chatbot-header button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.chatbot-header button:active {
+    transform: scale(0.95);
+}
+
+/* Optional: if you want the X icon itself to have specific styling */
+.chatbot-header button svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+
+/* Enhanced messages container */
+.chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background-color: var(--bg-primary);
+}
+
+/* Enhanced bot message styles */
+.chatbot-message.bot {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--card-border);
+}
+
+/* Enhanced input area styles */
+.chatbot-input {
+    padding: 1rem;
+    border-top: 2px solid var(--card-border);
+    display: flex;
+    gap: 0.5rem;
+    background-color: var(--card-bg);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.chatbot-input input {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--card-border);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.chatbot-input button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    background: var(--color-success);
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.chatbot-input button:hover {
+    opacity: 0.9;
+}
+
+/* Enhanced toggle button styles */
 .chatbot-toggle {
     position: fixed;
     right: 2rem;
     bottom: 2rem;
-    z-index: 1001; /* Should be higher than chatbot-window */
-    transform: translateZ(0); /* Force GPU acceleration */
-    will-change: transform; /* Optimize animations */
+    padding: 0.75rem;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 10px var(--color-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 49;
+    border: 2px solid var(--color-primary);
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbot-toggle img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 /* Add a backdrop to prevent interaction with background content when chatbot is open */
@@ -54,45 +163,50 @@
     bottom: 0;
     background: transparent;
     pointer-events: none;
-    z-index: 999; /* Just below chatbot */
+    z-index: 999;
+    display: none;
 }
 
 .chatbot-backdrop.open {
+    display: block;
     pointer-events: auto;
 }
 
 
 @keyframes fadeIn {
-    from {
+    0% {
+        display: flex;
         opacity: 0;
-        transform: translateY(20px); /* Slight move up during fade-in */
+        transform: translateY(30px);
     }
-    to {
+    1% {
+        display: flex;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        display: flex;
         opacity: 1;
         transform: translateY(0);
     }
 }
 
 @keyframes fadeOut {
-    from {
+    0% {
+        display: flex;
         opacity: 1;
         transform: translateY(0);
     }
-    to {
+    99% {
+        display: flex;
         opacity: 0;
-        transform: translateY(20px); /* Slight move down during fade-out */
+        transform: translateY(30px);
     }
-}
-
-/* Keep the rest of your chatbot styles from Projects.css or VisionAidHomepage.css here, if needed, or ensure they are universally defined */
-
-.chatbot-header {
-    padding: 1rem;
-    background: var(--header-bg);
-    border-bottom: 1px solid var(--card-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    100% {
+        display: none;
+        opacity: 0;
+        transform: translateY(30px);
+    }
 }
 
 .chatbot-messages {

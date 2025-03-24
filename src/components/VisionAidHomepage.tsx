@@ -389,7 +389,14 @@ const VisionAidHomepage = () => {
           <h3 className="footer-title">VisionAid</h3>
           <p>Transforming urban infrastructure through intelligent technology.</p>
           <div className="social-icons">
-            <a href="#" className="social-icon"><FaGithub /></a>
+            <a 
+              href="https://github.com/ArnavNath2003/Vision-Aid" 
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaGithub />
+            </a>
             <a href="#" className="social-icon"><FaLinkedin /></a>
             <a href="#" className="social-icon"><FaTwitter /></a>
             <a href="#" className="social-icon"><FaInstagram /></a>
@@ -436,14 +443,17 @@ const VisionAidHomepage = () => {
       
       <button
         className="chatbot-toggle"
-        onClick={() => setIsChatOpen(!isChatOpen)}
+        onClick={() => setIsChatOpen(true)}
       >
         <img src={chatbotImageUrl} alt="Chatbot" />
       </button>
       
       <Chatbot
         isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
+        onClose={() => {
+          console.log("Parent onClose called"); // Debug log
+          setIsChatOpen(false);
+        }}
       />
       
       <main className="main-content">

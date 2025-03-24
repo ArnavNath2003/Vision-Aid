@@ -59,20 +59,21 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
-  // Enhanced close animation handling
+  // This is the main closing function that should be called everywhere
   const onCloseWithAnimation = () => {
     setIsClosing(true);
+    // Don't call onClose immediately
     setTimeout(() => {
-      onClose();
       setIsClosing(false);
-    }, 300); // Match this with CSS animation duration
+      onClose();
+    }, 500);
   };
 
-  // Updated ESC key handler
+  // ESC key handler
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
-        onCloseWithAnimation();
+        onCloseWithAnimation();  // Make sure we're using onCloseWithAnimation
       }
     };
 
@@ -165,10 +166,15 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <div className={`chatbot-backdrop ${isOpen ? 'open' : ''}`} onClick={onClose} />
-      <div className={`chatbot-window ${isOpen ? 'open' : (isClosing ? 'closed' : '')}`}>
+      {/* Make sure onClick is using onCloseWithAnimation */}
+      <div 
+        className={`chatbot-backdrop ${isOpen ? 'open' : ''}`} 
+        onClick={onCloseWithAnimation}
+      />
+      <div className={`chatbot-window ${isOpen ? 'open' : ''} ${isClosing ? 'closing' : ''}`}>
         <div className="chatbot-header">
           <h3>AI Assistant</h3>
+          {/* Make sure X button is using onCloseWithAnimation */}
           <button onClick={onCloseWithAnimation}>
             <X size={20} />
           </button>

@@ -86,7 +86,14 @@ const About: React.FC = () => {
           <h3 className="footer-title">VisionAid</h3>
           <p>Transforming urban infrastructure through intelligent technology.</p>
           <div className="social-icons">
-            <a href="#" className="social-icon"><FaGithub /></a>
+            <a 
+              href="https://github.com/ArnavNath2003/Vision-Aid" 
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaGithub />
+            </a>
             <a href="#" className="social-icon"><FaLinkedin /></a>
             <a href="#" className="social-icon"><FaTwitter /></a>
             <a href="#" className="social-icon"><FaInstagram /></a>
