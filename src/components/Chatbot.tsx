@@ -164,40 +164,43 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
   }
 
   return (
-    <div className={`chatbot-window ${isOpen ? 'open' : (isClosing ? 'closed' : '')}`}>
-      <div className="chatbot-header">
-        <h3>AI Assistant</h3>
-        <button onClick={onCloseWithAnimation}>
-          <X size={20} />
-        </button>
+    <>
+      <div className={`chatbot-backdrop ${isOpen ? 'open' : ''}`} onClick={onClose} />
+      <div className={`chatbot-window ${isOpen ? 'open' : (isClosing ? 'closed' : '')}`}>
+        <div className="chatbot-header">
+          <h3>AI Assistant</h3>
+          <button onClick={onCloseWithAnimation}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="chatbot-messages">
+          {messages.map((message, index) => (
+            <div key={index} className={`chatbot-message ${message.sender} ${isProcessing && index === messages.length - 1 ? 'processing' : ''}`}>
+              {message.text}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+        <div className="chatbot-input">
+          <input
+            ref={inputRef}
+            type="text"
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder={isProcessing ? "Processing..." : "Press '/' to chat"}
+            disabled={isProcessing}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isProcessing) {
+                handleSendMessage();
+              }
+            }}
+          />
+          <button onClick={handleSendMessage} disabled={isProcessing}>
+            <Send size={20} />
+          </button>
+        </div>
       </div>
-      <div className="chatbot-messages">
-        {messages.map((message, index) => (
-          <div key={index} className={`chatbot-message ${message.sender} ${isProcessing && index === messages.length - 1 ? 'processing' : ''}`}>
-            {message.text}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="chatbot-input">
-        <input
-          ref={inputRef}
-          type="text"
-          value={chatMessage}
-          onChange={(e) => setChatMessage(e.target.value)}
-          placeholder={isProcessing ? "Processing..." : "Press '/' to chat"}
-          disabled={isProcessing}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !isProcessing) {
-              handleSendMessage();
-            }
-          }}
-        />
-        <button onClick={handleSendMessage} disabled={isProcessing}>
-          <Send size={20} />
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
 

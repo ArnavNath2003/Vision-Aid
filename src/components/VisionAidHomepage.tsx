@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import './VisionAidHomepage.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Chatbot from './Chatbot';
 
@@ -227,28 +227,32 @@ const VisionAidHomepage = () => {
     };
   }, [isChatOpen]);
 
-  const Header = () => (
-    <header className="header">
-      <div className="header-container">
-        <div className="logo-container">
-          <Globe className="logo-icon" />
-          <h1 className="logo-text">VisionAid</h1>
+  const Header = () => {
+    const location = useLocation();
+    
+    return (
+      <header className="header">
+        <div className="header-container">
+          <Link to="/" className="logo-container" style={{ textDecoration: 'none' }}>
+            <Globe className="logo-icon" />
+            <h1 className="logo-text">VisionAid</h1>
+          </Link>
+          <nav className="nav-menu">
+            <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
+            <Link to="/projects" className={`nav-link ${location.pathname === '/projects' ? 'active' : ''}`}>Projects</Link>
+            <Link to="/about" className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}>About</Link>
+            <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+          </nav>
+          <button
+            className="mode-toggle"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+          >
+            {isDarkMode ? <Sun className="toggle-icon" /> : <Moon className="toggle-icon" />}
+          </button>
         </div>
-        <nav className="nav-menu">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/projects" className="nav-link">Projects</Link>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/contact" className="nav-link">Contact</Link>
-        </nav>
-        <button
-          className="mode-toggle"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-        >
-          {isDarkMode ? <Sun className="toggle-icon" /> : <Moon className="toggle-icon" />}
-        </button>
-      </div>
-    </header>
-  );
+      </header>
+    );
+  };
 
   // Update the interface for ProjectModal props
   interface ProjectModalProps {

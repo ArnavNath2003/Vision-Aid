@@ -75,17 +75,11 @@ body, html {
   margin-right: 10px;
 }
 .nav-link {
-  color: #ffffff; /* Default color */
+  color: var(--text-primary); /* Use theme color instead of white */
   text-decoration: none;
   padding: 10px 15px;
   transition: color 0.3s ease, border-bottom 0.3s ease;
 }
-
-.nav-link.active {
-  color: #ffcc00; /* Highlight color */
-  border-bottom: 2px solid #ffcc00; /* Underline effect */
-}
-
 
 .logo-container {
   display: flex;
@@ -164,20 +158,25 @@ body, html {
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg,
+  background: linear-gradient(90deg, 
     var(--color-primary),
     var(--color-success)
   );
   transition: width 0.3s ease;
 }
 
-.nav-link:hover::before {
+.nav-link:hover::before,
+.nav-link.active::before {
   width: 80%;
 }
 
-.nav-link:hover {
+.nav-link.active {
+  transform: scale(1.05) translateY(-2px);
+  text-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.nav-link:hover:not(.active) {
   transform: translateY(-2px);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 /* Mode toggle button - Consistent with VisionAidHomepage.css and About.css */
@@ -377,193 +376,327 @@ body, html {
   display: none;
 }
 
-/* Project Carousel Section - Styling for the carousel container */
-.project-carousel-section {
-  margin-bottom: 4rem;
-  padding: 2rem 0; /* Add padding to the top and bottom of the carousel section */
-}
-
-.project-carousel {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Center the carousel items */
-  gap: 2rem;
+/* Masonry Grid Layout */
+.projects-masonry-section {
   padding: 2rem;
-  overflow: hidden; /* Ensure carousel items stay within bounds */
-  position: relative; /* For positioning carousel buttons */
+  max-width: 1800px;
+  margin: 0 auto;
 }
 
-.carousel-card {
-  max-width: 800px;
-  width: 100%;
-  cursor: default;
-  margin: 0 1rem; /* Add horizontal margin between carousel cards */
-}
-
-/* Carousel Buttons - Styling for navigation buttons */
-.carousel-button {
-  position: absolute; /* Position buttons relative to carousel */
-  top: 50%;  
-  background: var(--card-bg); /* Card background for buttons */
-  border: none;
-  color: var(--color-primary);
-  font-size: 2rem;
-  cursor: pointer;
-  transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
-  opacity: 0.7;
-  padding: 1rem;
-  border-radius: 50%;
+.projects-masonry-grid {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add subtle shadow to buttons */
+  margin-left: -30px;
+  width: auto;
 }
 
-.carousel-button:hover {
-  opacity: 1;
-  background-color: var(--color-primary); /* Primary color on hover */
-  color: white; /* White icon color on hover */
-  transform: scale(1.05); /* Keep only scale transform for hover */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+.projects-masonry-grid_column {
+  padding-left: 30px;
+  background-clip: padding-box;
 }
 
-.carousel-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-  background-color: var(--card-bg); /* Revert to card background when disabled */
-  color: var(--color-primary); /* Keep primary color but faded */
-}
-
-.carousel-button.prev {
-  left: 1rem; /* Position previous button to the left */
-  transform: translateY(-50%) rotate(180deg); /* Flip icon for prev button */
-}
-
-.carousel-button.next {
-  right: 1rem; /* Position next button to the right */
-  margin-top: -30px;
-}
-
-.carousel-button.next:hover {  
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  opacity: 1;
-  background-color: var(--color-primary);
-  color: white;
-}
-
-/* Adjustments for project card within carousel - Refined card styles for carousel */
-.carousel-card .project-card {
-  cursor: default; /* Ensure default cursor in carousel */
-  padding: 2.5rem; /* Slightly increased padding for carousel cards */
-  border-radius: 1.75rem; /* More rounded corners for carousel cards */
-  box-shadow: 0 10px 40px var(--card-shadow); /* Enhanced shadow for carousel cards */
-}
-
-.carousel-card .project-card:hover {
-  transform: scale(1.01); /* Subtle scale on hover in carousel */
-  box-shadow: 0 12px 45px var(--card-shadow); /* Slightly enhanced shadow on carousel card hover */
-  border-color: var(--card-hover-border);
-}
-
-.carousel-card .project-description {
-  margin-bottom: 2.5rem; /* Increased description margin in carousel */
-  font-size: 1.15rem; /* Slightly larger font size for description in carousel */
-  line-height: 1.8; /* Improved line height for description in carousel */
-}
-
-.carousel-card .project-button,
-.carousel-card .view-details-button {
-  padding: 1rem 2rem; /* Slightly larger buttons in carousel */
-  font-size: 1rem; /* Slightly larger button text in carousel */
-}
-
-/* Ensure "View Details" button text is readable */
-.carousel-card .view-details-button {
-  color: var(--text-primary); /* Set text color to primary text color */
-}
-
-/* Project Details (Expanded Card) */
-.project-details {
-  margin-top: 2rem; /* Increased margin */
-  border-top: 1px solid var(--card-border); /* Card border */
-  padding-top: 2rem; /* Increased padding */
-}
-
-.project-image-container {
-  width: 100%;
-  border-radius: 1rem; /* Rounded image corners */
+.project-masonry-card {
+  break-inside: avoid;
+  margin-bottom: 30px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
   overflow: hidden;
-  margin-bottom: 2rem; /* Increased margin */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-card-content {
+  padding: 1.75rem;
+}
+
+.project-image-wrapper {
+  margin: -1.75rem -1.75rem 1.75rem;
+  overflow: hidden;
+  max-height: 300px;
 }
 
 .project-image {
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
 
-.project-image:hover {
+.project-masonry-card:hover .project-image {
   transform: scale(1.05);
 }
 
-.project-tech, .project-features, .project-impact {
-  margin-bottom: 2rem; /* Increased margin */
-}
-
-.project-tech h4, .project-features h4, .project-impact h4 {
-  font-size: 1.2rem; /* Slightly larger heading */
-  font-weight: bold; /* Bold heading */
-  margin-bottom: 1.2rem; /* Increased margin */
-  color: var(--text-primary);
-}
-
-.tech-tags {
+.project-features {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem; /* Increased gap */
-}
-
-.tech-tag {
-  background-color: var(--card-bg); /* Card background for tags */
-  color: var(--text-primary); /* Primary text color for tags */
-  font-size: 0.9rem; /* Slightly larger tag text */
-  padding: 0.5rem 1rem; /* Adjusted padding */
-  border-radius: 0.75rem; /* More rounded tags */
-  border: 1px solid var(--card-border); /* Tag border */
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem; /* Increased margin */
-  color: var(--text-primary); /* Primary text color for features */
-  opacity: 0.9;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .feature-icon {
-  color: var(--color-primary);
-  margin-right: 0.75rem; /* Increased margin */
+  width: 18px;
+  height: 18px;
+  color: var(--color-success);
 }
 
-.project-button {
-  background: var(--color-primary); /* Primary color for button */
-  border: none;
-  color: white;
-  font-weight: 600;
-  padding: 0.9rem 2rem; /* Adjusted padding */
-  border-radius: 0.75rem; /* More rounded button */
-  cursor: pointer;
+.project-tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.tech-badge {
+  padding: 0.4rem 0.8rem;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
   transition: all 0.3s ease;
-  width: 100%;
-  margin-top: 1.5rem; /* Increased margin */
 }
 
-.project-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.view-details-button,
+.try-now-button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 1200px) {
+  .projects-masonry-section {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .projects-masonry-section {
+    padding: 1rem;
+  }
+  
+  .project-card-content {
+    padding: 1.25rem;
+  }
+  
+  .button-container {
+    flex-direction: column;
+  }
+}
+
+/* Dark Mode Enhancements */
+.dark-mode .project-masonry-card {
+  background: rgba(20, 32, 64, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .projects-masonry-section {
+    padding: 1rem;
+  }
+  
+  .project-card-content {
+    padding: 1.5rem;
+  }
+  
+  .project-header {
+    flex-direction: column;
+  }
+  
+  .project-status {
+    align-self: flex-start;
+  }
+  
+  .button-container {
+    flex-direction: column;
+  }
+}
+
+/* Enhanced tech tags */
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem; /* Increased from 0.75rem */
+  margin-top: 1.5rem; /* Increased from 1rem */
+}
+
+.tech-tag {
+  padding: 0.6rem 1.2rem; /* Increased padding */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 2rem;
+  font-size: 1rem; /* Increased from 0.9rem */
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.project-grid-card:hover .tech-tag {
+  transform: translateY(-2px);
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+/* Button container improvements */
+.button-container {
+  display: flex;
+  gap: 1.5rem; /* Increased from 1rem */
+  margin-top: 2.5rem; /* Increased from 2rem */
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.project-grid-card:hover .button-container {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .projects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .projects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .project-grid-card {
+    min-width: unset; /* Remove minimum width on mobile */
+    padding: 2.5rem;
+  }
+}
+
+/* Dark mode refinements */
+.dark-mode .project-grid-card {
+  background: rgba(20, 32, 64, 0.8);
+  border: 1px solid rgba(102, 204, 255, 0.1);
+}
+
+.dark-mode .project-grid-card:hover {
+  background: rgba(25, 40, 80, 0.9);
+  border-color: rgba(102, 204, 255, 0.2);
+}
+
+/* Animation for expanded state */
+.project-grid-card.expanded {
+  grid-column: 1 / -1;
+  max-width: 1200px;
+  margin: 0 auto;
+  cursor: default;
+  transform: none;
+}
+
+.project-grid-card.expanded:hover {
+  transform: none;
+}
+
+/* Maintain existing button styles but ensure they work in the new layout */
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .projects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .projects-grid-section {
+    padding: 1rem;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .project-grid-card {
+    padding: 2rem;
+  }
+
+  .project-title {
+    font-size: 1.5rem;
+  }
+
+  .project-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .project-actions {
+    flex-direction: column;
+  }
+
+  .button-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-grid-card {
+    padding: 1.5rem;
+  }
+
+  .tech-tags {
+    gap: 0.5rem;
+  }
+
+  .tech-tag {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark mode enhancements */
+.dark-mode .project-grid-card {
+  background: rgba(20, 32, 64, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 204, 255, 0.1);
+}
+
+/* Preserve existing button styles */
+.view-details-button,
+.try-now-button {
+  /* Keep your existing button styles */
+  width: 100%; /* Make buttons full width in the new layout */
 }
 
 /* Call To Action Section - Consistent with VisionAidHomepage.css and About.css card styles */
@@ -940,115 +1073,73 @@ body, html {
   color: white;
 }
 
-/* Project Status Styles - Adjust text scaling, add outline, and reduce size */
+/* Project Status Styles - Increased size and enhanced visibility */
 .project-status {
+  font-size: 0.85rem; /* Increased from 0.75rem */
+  padding: 0.5rem 1rem; /* Increased from 0.4rem 0.8rem */
+  border-radius: 1.2rem; /* Increased from 1rem */
+  font-weight: 600; /* Increased from 500 */
+  white-space: nowrap;
   display: inline-flex;
-  padding: 0.6rem 1.2rem;  /* Slightly increased padding */
-  border-radius: 2rem;     /* More rounded corners */
-  top: 2.0rem;
-  right: 1rem;
-  position: absolute;
-  font-size: 0.85rem;
-  font-weight: 500;        /* Lighter weight for modern look */
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 1px;     /* Increased letter spacing */
-  text-transform: uppercase;
-  color: var(--light);
-  background-color: var(--color-gray);
-  backdrop-filter: blur(8px);  /* Added glass effect */
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.1);  /* Subtle inner highlight */
-  overflow: hidden;
-  animation: pulse-green 2s infinite alternate;
   align-items: center;
-  gap: 0.4rem;
-  justify-content: center;
-  transform: scale(1);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.project-status::before {
-  content: '';
+  gap: 0.4rem; /* Increased from 0.3rem */
   position: relative;
-  width: 0.5rem;
-  height: 0.5rem;
-  background-color: inherit;
+}
+
+.status-dot {
+  width: 10px; /* Increased from 8px */
+  height: 10px; /* Increased from 8px */
   border-radius: 50%;
-  margin-right: 0.4rem;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-  animation: status-glow 1.5s infinite alternate;
-}
-
-@keyframes status-glow {
-  0% {
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-    transform: scale(1);
-  }
-  100% {
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
-    transform: scale(1.1);  /* Added subtle pulse to the dot */
-  }
-}
-
-@keyframes pulse-green {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6);
-  }
-  100% {    
-    box-shadow: 0 0 0 15px rgba(72, 187, 120, 0);
-  }
+  display: inline-block;
 }
 
 .project-status.active {
-  background: linear-gradient(135deg, 
-    rgba(72, 187, 120, 0.95), 
-    rgba(56, 161, 105, 0.95)
-  );
-  box-shadow: 
-    0 4px 15px rgba(72, 187, 120, 0.3),
-    0 0 0 1px rgba(72, 187, 120, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
+  transform: scale(1.1); /* Added scale */
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.15); /* Slightly more visible background */
+  border: 1.5px solid rgba(16, 185, 129, 0.3); /* Thicker border, more visible */
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1); /* Added subtle shadow */
 }
 
-.project-status.active::before {
-  background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 
-    0 0 8px rgba(255, 255, 255, 0.8),
-    0 0 15px rgba(72, 187, 120, 0.6);
+.project-status.active .status-dot {
+  width: 10px; /* Slightly larger dot */
+  height: 10px;
+  background-color: #10B981;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+  animation: pulse 2s infinite;
 }
 
-.project-status.development {
-  background-color: var(--color-primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(49, 130, 206, 0.6); /* Slightly reduced development shadow */
+/* Enhanced pulse animation for active status */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
-.project-status.development::before {
-  background-color: var(--color-light);
-  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced development dot glow */
+/* Keep inactive status proportional but slightly less prominent */
+.project-status.inactive {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1.5px solid rgba(239, 68, 68, 0.2);
 }
 
-.project-status.planning {
-  background-color: var(--color-gray);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(113, 128, 150, 0.6); /* Slightly reduced planning shadow */
+.project-status.inactive .status-dot {
+  background-color: #EF4444;
+  opacity: 0.8;
 }
 
-.project-status.planning::before {
-  background-color: var(--color-light);
-  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced planning dot glow */
-}
-
-.project-status.research {
-  background-color: var(--color-warning);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(245, 158, 11, 0.6); /* Slightly reduced research shadow */
-}
-
-.project-status.research::before {
-  background-color: var(--color-light);
-  box-shadow: 0 0 6px var(--color-light); /* Slightly reduced research dot glow */
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .project-status {
+    font-size: 0.8rem;
+    padding: 0.45rem 0.9rem;
+  }
 }
 
 /* Project Benefits Section - Overlapping Cards Layout - Enhanced Overlap */
@@ -1355,4 +1446,243 @@ body, html {
 .carousel-card .try-now-button {
   padding: 1rem 2rem;
   font-size: 1rem;
+}
+
+.project-masonry-card {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 1.5rem;
+  padding: 1.5rem; /* Further reduced from 2rem */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px var(--card-shadow);
+  margin-bottom: 1rem; /* Reduced from 1.5rem */
+}
+
+.project-masonry-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.project-masonry-card:hover::before {
+  transform: scaleX(1);
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem; /* Reduced from 1rem */
+}
+
+.project-header-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.project-icon-container {
+  min-width: 3rem; /* Fixed width */
+  width: 3rem; /* Reduced and made consistent */
+  height: 3rem; /* Equal to width for perfect circle */
+  border-radius: 50%; /* Changed to 50% for perfect circle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.project-status {
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  position: relative;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.project-status.active {
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.project-status.active .status-dot {
+  background-color: #10B981;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.project-status.inactive {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.project-status.inactive .status-dot {
+  background-color: #EF4444;
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.project-title {
+  font-size: 1.25rem; /* Reduced from 1.5rem */
+  font-weight: 700;
+  margin: 0; /* Removed margins */
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+.project-description {
+  color: var(--text-primary);
+  opacity: 0.9;
+  line-height: 1.4; /* Reduced from 1.5 */
+  margin: 0.5rem 0; /* Reduced margins */
+  font-size: 0.9rem; /* Slightly smaller text */
+}
+
+.tech-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.tech-badge:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.view-details-button,
+.try-now-button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.view-details-button {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.try-now-button {
+  background: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.project-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Reduced minmax */
+  gap: 0.75rem; /* Reduced gap */
+  margin: 1rem 0; /* Reduced margins */
+}
+
+.metric-item {
+  padding: 0.75rem; /* Reduced padding */
+}
+
+.metric-value {
+  font-size: 1.25rem; /* Reduced from 1.5rem */
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.project-image-wrapper {
+  width: 100%;
+  height: 140px; /* Reduced from 160px */
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin: 0.75rem 0; /* Reduced from 1rem */
+}
+
+.project-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.project-image:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .button-container {
+    flex-direction: column;
+  }
+  
+  .project-masonry-card {
+    padding: 1rem; /* Reduced from 1.25rem */
+  }
+  
+  .project-header {
+    flex-direction: row; /* Keep horizontal layout for header */
+    align-items: center;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

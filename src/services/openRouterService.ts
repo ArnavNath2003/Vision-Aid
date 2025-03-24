@@ -20,14 +20,15 @@ Technical Details: When asked about technical aspects, explain that VisionAid is
 
 Response Guidelines:
 - If asked about your creator/origin, respond: "I'm part of VisionAid's platform, created by VisionAid to assist with urban infrastructure management."
-- For navigation requests, respond with "I'll take you to the [Page Name]. navigate:/PAGE"
+- For ANY navigation or page-related requests (e.g., "take me to projects", "show me about page", "go to contact"), ALWAYS respond with EXACTLY this format: "I'll take you to the [Page Name]. navigate:/PAGE" where PAGE is one of: home, projects, about, or contact
 - Keep responses under 2 sentences unless technical details are requested
 - Only discuss VisionAid-related topics
 
 Strict Guidelines:
 - Never mention other companies or platforms
 - Don't provide external links
-- For off-topic questions, respond: "I can only assist with questions about VisionAid's urban infrastructure platform. How can I help you with that?"`
+- For off-topic questions, respond: "I can only assist with questions about VisionAid's urban infrastructure platform. How can I help you with that?"
+- ALWAYS include the exact "navigate:/PAGE" syntax for navigation requests`
 
 export const generateResponse = async (
   messages: OpenRouterMessage[]
@@ -49,7 +50,7 @@ export const generateResponse = async (
           },
           ...messages
         ],
-        temperature: 0.4
+        temperature: 0.3, // Reduced temperature for more consistent responses
       })
     });
 

@@ -4,28 +4,39 @@ import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { 
   Globe, Sun, Moon, ArrowRight, Network,
-  Layers, ChevronRight, Bolt, Lightbulb, TrendingUp
+  Layers, Bolt, Lightbulb, TrendingUp
 } from 'lucide-react';
 import * as THREE from 'three';
 import './Projects.css';
 import Chatbot from './Chatbot';
 import { useLocation } from 'react-router-dom';
+import Masonry from 'react-masonry-css';
 
 interface Project {
   id: string;
   title: string;
+  category: string;
   description: string;
   icon: React.ReactNode;
-  image: string;
+  color: string;
+  technologies: string[];
+  features: string[];
   status: string;
+  image: string;
+  metrics?: ProjectMetric[];
+  liveUrl?: string;
+  impact?: string;
+}
+
+interface ProjectMetric {
+  value: string | number;
+  label: string;
 }
 
 const Projects: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   
   const chatbotImageUrl = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png";
 
@@ -146,10 +157,10 @@ const Projects: React.FC = () => {
     return (
       <header className="header">
         <div className="header-container">
-          <div className="logo-container">
+          <Link to="/" className="logo-container" style={{ textDecoration: 'none' }}>
             <Globe className="logo-icon" />
             <h1 className="logo-text">VisionAid</h1>
-          </div>
+          </Link>
           <nav className="nav-menu">
             <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
             <Link to="/projects" className={`nav-link ${location.pathname === '/projects' ? 'active' : ''}`}>Projects</Link>
@@ -211,13 +222,12 @@ const Projects: React.FC = () => {
     </footer>
   );
 
-  const projects = [
+  const projects: Project[] = [
     {
       id: "urban-traffic",
       title: "Urban Traffic Dynamics",
       category: "ai",
-      description:
-        "Revolutionizing urban mobility through AI-powered traffic optimization, reducing congestion by up to 35% in pilot cities.",
+      description: "Revolutionizing urban mobility through AI-powered traffic optimization, reducing congestion by up to 35% in pilot cities.",
       icon: <Network className="project-icon" />,
       color: "primary",
       technologies: ["TensorFlow", "Computer Vision", "IoT Sensors", "Cloud Computing"],
@@ -228,69 +238,121 @@ const Projects: React.FC = () => {
         "Emergency vehicle priority routing",
       ],
       status: "active",
-      impact: "Implemented in 3 major urban centers with 27% average reduction in commute times.",
-      image: "/api/placeholder/600/400",
+      metrics: [
+        { value: "35%", label: "Congestion Reduction" },
+        { value: "12M+", label: "Daily Commuters" },
+        { value: "5", label: "Pilot Cities" }
+      ],
+      image: "/images/traffic-system.jpg",
+      liveUrl: "https://example.com/demo",
+      impact: "Reduced urban traffic congestion by 35% in pilot cities"
     },
     {
       id: "smart-infrastructure",
-      title: "Smart Infrastructure Intelligence",
-      category: "ai",
-      description:
-        "Pioneering proactive infrastructure management using advanced AI to detect potential failures before they occur.",
+      title: "Smart Infrastructure Monitor",
+      category: "iot",
+      description: "IoT-based infrastructure monitoring system using advanced sensors and ML for predictive maintenance.",
       icon: <Layers className="project-icon" />,
       color: "success",
-      technologies: ["Machine Learning", "Structural Sensors", "Digital Twins", "Predictive Analytics"],
+      technologies: ["IoT", "Machine Learning", "AWS", "Python"],
       features: [
-        "Continuous structural health monitoring",
-        "Predictive maintenance scheduling",
-        "Resource optimization algorithms",
-        "Climate impact assessments",
+        "24/7 structural health monitoring",
+        "Predictive maintenance alerts",
+        "Real-time data visualization",
+        "Automated inspection reports"
       ],
       status: "active",
-      impact: "Prevented 12 critical infrastructure failures in 2023, saving an estimated $43M in repair costs.",
-      image: "/api/placeholder/600/400",
+      metrics: [
+        { value: "45%", label: "Maintenance Cost Reduction" },
+        { value: "1000+", label: "Active Sensors" },
+        { value: "99.9%", label: "Uptime" }
+      ],
+      image: "/images/infrastructure.jpg",
+      liveUrl: "https://example.com/infrastructure"
     },
+    // Add more projects with varying heights
   ];
   
-  // Component to render project cards
-  // @ts-expect-error Component will be used in future implementation
   const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
     return (
-      <div className="project-card">
-        <img src={project.image} alt={project.title} className="project-image" />
-        <div className="project-content">
+      <motion.div
+        className="project-masonry-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ 
+          y: -5, // Reduced hover lift
+          transition: { duration: 0.3, ease: "easeOut" }
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="project-card-content">
           <div className="project-header">
-            {project.icon}
-            <h3 className="project-title">{project.title}</h3>
+            <div className="project-header-main">
+              <div className={`project-icon-container ${project.color}`}>
+                {project.icon}
+              </div>
+              <h3 className="project-title">{project.title}</h3>
+            </div>
+            <div className={`project-status ${project.status}`}>
+              <span className="status-dot" />
+              {project.status === 'active' ? 'Active' : 'Inactive'}
+            </div>
           </div>
+
           <p className="project-description">{project.description}</p>
-          {/* Styled Active Status Badge */}
-          <span className={`status-badge ${project.status === "active" ? "active-status" : ""}`}>
-            {project.status === "active" ? "🟢 Active" : "🔴 Inactive"}
-          </span>
+          
+          {project.image && (
+            <motion.div 
+              className="project-image-wrapper"
+              whileHover={{ scale: 1.03 }} // Reduced scale effect
+            >
+              <img 
+                src={project.image} 
+                alt={project.title}
+                className="project-image"
+              />
+            </motion.div>
+          )}
+          
+          <div className="tech-tags">
+            {project.technologies.map((tech, index) => (
+              <motion.span 
+                key={index} 
+                className="tech-badge"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                {tech}
+              </motion.span>
+            ))}
+          </div>
+
+          <div className="button-container">
+            <motion.button 
+              className="view-details-button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              View Details
+            </motion.button>
+            {project.liveUrl && (
+              <motion.a 
+                href={project.liveUrl} 
+                className="try-now-button"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Try Now <ArrowRight size={16} />
+              </motion.a>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
-  
-
-  const toggleProjectExpansion = (id: string) => {
-    if (expandedProject === id) {
-      setExpandedProject(null);
-    } else {
-      setExpandedProject(id);
-    }
-  };
-
-  const goToPreviousProject = () => {
-    setCurrentProjectIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : projects.length - 1));
-  };
-
-  const goToNextProject = () => {
-    setCurrentProjectIndex((prevIndex) => (prevIndex < projects.length - 1 ? prevIndex + 1 : 0));
-  };
-
-  const currentProject = projects[currentProjectIndex];
 
   const ProjectBenefits = () => {
     const benefits = [
@@ -349,6 +411,14 @@ const Projects: React.FC = () => {
     setIsChatOpen(false);
   };
 
+  // Add these breakpoints for the Masonry grid
+  const breakpointColumnsObj = {
+    default: 3,
+    1400: 2,
+    900: 2,
+    600: 1
+  };
+
   return (
     <div className={isDarkMode ? 'dark-mode' : 'light-mode'}>
       <canvas ref={canvasRef} className="canvas-container" />
@@ -392,112 +462,18 @@ const Projects: React.FC = () => {
           </motion.p>
         </motion.section>
 
-        {/* Project Carousel Section */}
-        <motion.section
-          className="project-carousel-section"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <div className="project-carousel">
-            <button className="carousel-button prev" onClick={goToPreviousProject}>
-              <ChevronRight size={24} />
-            </button>
-            <motion.div
-              className={`project-card expanded carousel-card`}
-              key={currentProject.id}
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.5 }}
-              onClick={() => toggleProjectExpansion(currentProject.id)}
-            >
-              <div className="project-header">
-                <div className={`project-icon-container ${currentProject.color}`}>
-                  {currentProject.icon}
-                </div>
-                <h3 className="project-title">{currentProject.title}</h3>
-                <div className={`project-status ${currentProject.status}`}>
-                  {currentProject.status}
-                </div>
-              </div>
-              
-              <p className="project-description">{currentProject.description}</p>
-              
-              {expandedProject === currentProject.id && (
-                <motion.div 
-                  className="project-details"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="project-image-container">
-                    <img src={currentProject.image} alt={currentProject.title} className="project-image" />
-                  </div>
-                  
-                  <div className="project-tech">
-                    <h4>Technologies</h4>
-                    <div className="tech-tags">
-                      {currentProject.technologies.map((tech, i) => (
-                        <span key={i} className="tech-tag">{tech}</span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="project-features">
-                    <h4>Key Features</h4>
-                    <ul>
-                      {currentProject.features.map((feature, i) => (
-                        <li key={i} className="feature-item">
-                          <ChevronRight size={16} className="feature-icon" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="project-impact">
-                    <h4>Impact</h4>
-                    <p>{currentProject.impact}</p>
-                  </div>
-                  
-                  <button className="project-button">
-                    Learn More
-                  </button>
-                </motion.div>
-              )}
-              
-              {expandedProject !== currentProject.id && (
-                <div className="button-container">
-                  <button 
-                    className="view-details-button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Stop event from bubbling up
-                      toggleProjectExpansion(currentProject.id);
-                    }}
-                  >
-                    View Details
-                  </button>
-                  <a 
-                    href="#" // Placeholder link for now
-                    className="try-now-button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent project expansion
-                      e.preventDefault(); // Prevent default anchor behavior
-                      // Later you can add your routing logic here
-                      // For example: router.push(currentProject.projectLink);
-                    }}
-                  >
-                    Try Now
-                  </a>
-                </div>
-              )}
-            </motion.div>
-            <button className="carousel-button next" onClick={goToNextProject}>
-              <ChevronRight size={24} />
-            </button>
-          </div>
-        </motion.section>
+        {/* Project Masonry Section */}
+        <section className="projects-masonry-section">
+          <Masonry
+            breakpointCols={breakpointColumnsObj}
+            className="projects-masonry-grid"
+            columnClassName="projects-masonry-grid_column"
+          >
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </Masonry>
+        </section>
 
         <ProjectBenefits />
 

@@ -115,7 +115,7 @@
   position: relative;
   overflow: hidden;
   color: var(--text-primary);
-  text-decoration: none;  
+  text-decoration: none;
 }
 
 .nav-link::before {
@@ -133,13 +133,26 @@
   transition: width 0.3s ease;
 }
 
-.nav-link:hover::before {
+/* Make the gradient underline visible for both hover and active states */
+.nav-link:hover::before,
+.nav-link.active::before {
   width: 80%;
 }
 
-.nav-link:hover {
+/* Add subtle glow effect for active state */
+.nav-link.active {
   transform: translateY(-2px);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  text-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* Optional: Add a slight scale effect for active link */
+.nav-link.active {
+  transform: scale(1.05);
+}
+
+/* Ensure hover effect doesn't stack with active state */
+.nav-link.active:hover {
+  transform: scale(1.05) translateY(-2px);
 }
 
 /* Main content styles */

@@ -60,10 +60,10 @@ const About: React.FC = () => {
       return (
         <header className="header">
           <div className="header-container">
-            <div className="logo-container">
+            <Link to="/" className="logo-container" style={{ textDecoration: 'none' }}>
               <Globe className="logo-icon" />
               <h1 className="logo-text">VisionAid</h1>
-            </div>
+            </Link>
             <nav className="nav-menu">
               <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
               <Link to="/projects" className={`nav-link ${location.pathname === '/projects' ? 'active' : ''}`}>Projects</Link>
