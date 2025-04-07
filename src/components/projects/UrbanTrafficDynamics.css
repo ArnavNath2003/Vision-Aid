@@ -21,52 +21,52 @@
   transform: translateX(-5px);
 }
 
-.theme-switch-wrapper {
+.traffic-theme-switch-wrapper {
   position: fixed;
-  top: 0.5rem;  /* Moved slightly higher */
-  right: 2.5rem;
+  top: 2rem;
+  right: 2rem;
   z-index: 100;
 }
 
-.theme-switch {
+.traffic-theme-switch {
   position: relative;
   display: inline-block;
-  width: 80px;  /* Increased from 60px */
-  height: 40px;  /* Increased from 34px */
+  width: 80px;
+  height: 40px;
 }
 
-.theme-switch input {
+.traffic-theme-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.slider {
+.traffic-slider {
   position: relative;
   cursor: pointer;
-  width: 80px;  /* Match with theme-switch width */
-  height: 40px;  /* Match with theme-switch height */
+  width: 80px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 40px;  /* Increased for smoother curve */
+  border-radius: 40px;
   backdrop-filter: blur(12px);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);  /* Smoother transition */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1),
               0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.gooey-container {
+.traffic-gooey-container {
   position: absolute;
   width: 100%;
   height: 100%;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.gooey-ball {
+.traffic-gooey-ball {
   position: absolute;
-  width: 32px;  /* Increased from 26px */
-  height: 32px;  /* Increased from 26px */
+  width: 32px;
+  height: 32px;
   background: #ffffff;
   border-radius: 50%;
   top: 4px;
@@ -75,105 +75,73 @@
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
 }
 
-.theme-switch input:checked + .slider .gooey-ball {
-  transform: translateX(40px);  /* Adjusted for new width */
-  background: #ffffff;  /* Changed from yellow to white */
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);  /* Adjusted glow effect */
+.traffic-theme-switch input:checked + .traffic-slider .traffic-gooey-ball {
+  transform: translateX(40px);
+  background: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
-.gooey-icons {
+.traffic-gooey-icons {
   position: absolute;
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: space-between;
-  padding: 8px 12px;  /* Increased padding */
+  padding: 8px 12px;
   box-sizing: border-box;
 }
 
-.sun, .moon {
-  width: 24px;  /* Increased from 20px */
-  height: 24px;  /* Increased from 20px */
-  color: #2196F3;  /* Changed to a nice blue color */
+.traffic-sun, .traffic-moon {
+  width: 24px;
+  height: 24px;
+  color: #2196F3;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.6));  /* Blue-tinted shadow */
+  filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.6));
 }
 
-.sun {
+.traffic-sun {
   opacity: 0;
 }
 
-.moon {
+.traffic-moon {
   opacity: 1;
 }
 
-.theme-switch input:checked + .slider .sun {
+.traffic-theme-switch input:checked + .traffic-slider .traffic-sun {
   opacity: 1;
 }
 
-.theme-switch input:checked + .slider .moon {
+.traffic-theme-switch input:checked + .traffic-slider .traffic-moon {
   opacity: 0;
-}
-
-/* Enhanced light mode adjustments */
-.light-mode .back-button {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.light-mode .back-button:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.light-mode .slider {
-  background: rgba(0, 0, 0, 0.15);
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-.light-mode .gooey-ball {
-  background: #ffffff;  /* Keeping it white in light mode */
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-}
-
-.light-mode .sun,
-.light-mode .moon {
-  color: #1976D2;  /* Darker blue for better contrast in light mode */
 }
 
 /* Mobile responsiveness adjustments */
 @media (max-width: 768px) {
-  .back-button {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  .theme-switch-wrapper {
+  .traffic-theme-switch-wrapper {
     top: 1.5rem;
     right: 1.5rem;
   }
 
-  .theme-switch {
-    width: 70px;  /* Slightly smaller on mobile */
-    height: 35px;
-  }
-
-  .slider {
+  .traffic-theme-switch {
     width: 70px;
     height: 35px;
   }
 
-  .gooey-ball {
+  .traffic-slider {
+    width: 70px;
+    height: 35px;
+  }
+
+  .traffic-gooey-ball {
     width: 28px;
     height: 28px;
   }
 
-  .theme-switch input:checked + .slider .gooey-ball {
+  .traffic-theme-switch input:checked + .traffic-slider .traffic-gooey-ball {
     transform: translateX(35px);
   }
 
-  .sun, .moon {
+  .traffic-sun, .traffic-moon {
     width: 20px;
     height: 20px;
   }
@@ -187,18 +155,53 @@
 }
 
 .project-header {
-  text-align: center;
-  margin-bottom: 4rem;
+  text-align: center;  /* Center align the header container */
+  padding: 2rem 0;     /* Add some padding */
 }
 
 .project-header h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, #64B5F6, #2196F3);
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: 'Orbitron', sans-serif;
+  margin: 1rem 0 2rem 0;
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 1),    /* Darker pink */
+    rgba(70, 130, 180, 1),     /* Steel blue */
+    rgba(147, 112, 219, 1),    /* Medium purple */
+    rgba(219, 112, 147, 1)     /* Darker pink */
+  );
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-align: center;
+  letter-spacing: -0.02em;
+  animation: gradientFlow 15s ease infinite;
+  position: relative;  /* Added for underline positioning */
+}
+
+.project-header h1::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(219, 112, 147, 0.7),
+    rgba(70, 130, 180, 0.7),
+    rgba(147, 112, 219, 0.7),
+    transparent
+  );
+  border-radius: 3px;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .project-description {
@@ -390,6 +393,10 @@
   .upload-area {
     padding: 2rem;
   }
+  
+  .project-header h1::after {
+    width: 100px;
+  }
 }
 
 .analyze-button-container {
@@ -468,3 +475,4 @@
 .dark-mode .analyze-button:hover {
   background: linear-gradient(135deg, #1E88E5, #1565C0);
 }
+

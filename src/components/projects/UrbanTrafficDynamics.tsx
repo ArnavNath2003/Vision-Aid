@@ -79,27 +79,25 @@ const UrbanTrafficDynamics: React.FC = () => {
         <span>Back to Projects</span>
       </Link>
 
-      <div className="theme-switch-wrapper">
-        <label className="theme-switch">
+      <div className="traffic-theme-switch-wrapper">
+        <label className="traffic-theme-switch">
           <input
             type="checkbox"
             checked={!isDarkMode}
             onChange={() => setIsDarkMode(!isDarkMode)}
           />
-          <div className="slider">
-            <div className="gooey-container">
-              <div className="gooey-ball"></div>
-              <div className="gooey-icons">
-                <svg className="sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="4" fill="currentColor"/>
-                  <path d="M12 5V3M12 21v-2M5 12H3m18 0h-2M6.4 6.4L5 5m12.6 12.6l1.4 1.4M6.4 17.6L5 19m12.6-12.6L19 5" 
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <svg className="moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" 
-                    fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
+          <div className="traffic-slider">
+            <div className="traffic-gooey-ball"></div>
+            <div className="traffic-gooey-icons">
+              <svg className="traffic-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                <path d="M12 5V3M12 21v-2M5 12H3m18 0h-2M6.4 6.4L5 5m12.6 12.6l1.4 1.4M6.4 17.6L5 19m12.6-12.6L19 5" 
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <svg className="traffic-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" 
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
           </div>
         </label>
@@ -209,4 +207,5 @@ const UrbanTrafficDynamics: React.FC = () => {
 };
 
 export default UrbanTrafficDynamics;
+
 

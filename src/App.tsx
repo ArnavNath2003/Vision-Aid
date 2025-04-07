@@ -4,6 +4,7 @@ import Projects from './components/Projects';
 import About from './components/About';
 import Contact from './components/Contact';
 import UrbanTrafficDynamics from './components/projects/UrbanTrafficDynamics';
+import GuardianVision from './components/projects/GuardianVision';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<VisionAidHomepage />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/urban-traffic-dynamics" element={<UrbanTrafficDynamics />} />
+        <Route path="/projects/guardian-vision" element={<GuardianVision />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>

@@ -4,7 +4,8 @@ import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Globe, Sun, Moon, ArrowRight, Network,
-  Layers, Bolt, Lightbulb, TrendingUp
+  Layers, Bolt, Lightbulb, TrendingUp,
+  Search
 } from 'lucide-react';
 import * as THREE from 'three';
 import './Projects.css';
@@ -250,27 +251,29 @@ const Projects: React.FC = () => {
       impact: "Reduced urban traffic congestion by 35% in pilot cities"
     },
     {
-      id: "smart-infrastructure",
-      title: "Smart Infrastructure Monitor",
-      category: "iot",
-      description: "IoT-based infrastructure monitoring system using advanced sensors and ML for predictive maintenance.",
-      icon: <Layers className="project-icon" />,
+      id: "guardian-vision",
+      title: "Guardian Vision",
+      category: "ai",
+      description: "AI-powered facial recognition system for locating missing persons through multi-source surveillance integration, including CCTV networks, drones, and real-time video feeds.",
+      icon: <Search className="project-icon" />,
       color: "success",
-      technologies: ["IoT", "Machine Learning", "AWS", "Python"],
+      technologies: ["TensorFlow.js", "OpenCV", "WebRTC", "Geo-Location API", "Face-API.js"],
       features: [
-        "24/7 structural health monitoring",
-        "Predictive maintenance alerts",
-        "Real-time data visualization",
-        "Automated inspection reports"
+        "Multi-source video processing",
+        "Real-time facial recognition",
+        "Geolocation tracking",
+        "Facial landmark detection",
+        "Live webcam integration"
       ],
       status: "active",
       metrics: [
-        { value: "45%", label: "Maintenance Cost Reduction" },
-        { value: "1000+", label: "Active Sensors" },
-        { value: "99.9%", label: "Uptime" }
+        { value: "98%", label: "Recognition Accuracy" },
+        { value: "0.5s", label: "Processing Time" },
+        { value: "5+", label: "Input Sources" }
       ],
-      image: "/images/infrastructure.jpg",
-      liveUrl: true
+      image: "/images/guardian-vision.jpg",
+      liveUrl: true,
+      impact: "Helping locate missing persons through advanced AI surveillance integration"
     },
     // Add more projects with varying heights
   ];
@@ -279,9 +282,11 @@ const Projects: React.FC = () => {
     const navigate = useNavigate();
 
     const handleTryNow = (e: React.MouseEvent) => {
-      e.stopPropagation(); // Prevent card click event
+      e.stopPropagation();
       if (project.id === "urban-traffic") {
         navigate('/projects/urban-traffic-dynamics');
+      } else if (project.id === "guardian-vision") {
+        navigate('/projects/guardian-vision');
       }
     };
 
