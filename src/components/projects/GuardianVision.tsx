@@ -135,6 +135,9 @@ const GuardianVision: React.FC = () => {
   // Create a state variable to store the latest match results for display
   const [matchResults, setMatchResults] = useState<string>('');
 
+  // State to track whether the debug panel is expanded or collapsed
+  const [isDebugPanelExpanded, setIsDebugPanelExpanded] = useState<boolean>(false); // Collapsed by default
+
   // Create refs to store the last dimensions and counts for logging optimization
   const lastWidthRef = useRef<number>(0);
   const lastHeightRef = useRef<number>(0);
@@ -161,27 +164,27 @@ const GuardianVision: React.FC = () => {
     const personEncodings: { [key: string]: FaceEncoding[] } = {};
 
     for (const encoding of faceEncodings) {
-      // Extract person ID from label (e.g., "Person_1_2" -> "Person_1")
-      const personId = encoding.label.split('_').slice(0, 2).join('_');
+      // Extract image ID from label (e.g., "Image_1_2" -> "Image_1")
+      const imageId = encoding.label.split('_').slice(0, 2).join('_');
 
-      if (!personEncodings[personId]) {
-        personEncodings[personId] = [];
+      if (!personEncodings[imageId]) {
+        personEncodings[imageId] = [];
       }
 
-      personEncodings[personId].push(encoding);
+      personEncodings[imageId].push(encoding);
     }
 
-    resultsLog += `Grouped encodings into ${Object.keys(personEncodings).length} persons\n`;
+    resultsLog += `Grouped encodings into ${Object.keys(personEncodings).length} images\n`;
 
-    // For each person, calculate average distance across all their encodings
-    for (const personId in personEncodings) {
+    // For each image, calculate average distance across all their encodings
+    for (const imageId in personEncodings) {
       try {
-        const encodings = personEncodings[personId];
+        const encodings = personEncodings[imageId];
         let totalDistance = 0;
         let minDistance = Number.MAX_VALUE;
 
-        // Find the minimum distance among all encodings for this person
-        resultsLog += `\nMatching against ${personId}:\n`;
+        // Find the minimum distance among all encodings for this image
+        resultsLog += `\nMatching against ${imageId}:\n`;
         for (const encoding of encodings) {
           const distance = faceapi.euclideanDistance(descriptor, encoding.descriptor);
           totalDistance += distance;
@@ -204,11 +207,11 @@ const GuardianVision: React.FC = () => {
             confidence
           };
 
-          resultsLog += `  - New best match: ${personId}, distance: ${avgDistance.toFixed(4)}, ` +
+          resultsLog += `  - New best match: ${imageId}, distance: ${avgDistance.toFixed(4)}, ` +
                       `isMatch: ${isMatch}, confidence: ${confidence.toFixed(2)}%\n`;
         }
       } catch (error) {
-        resultsLog += `Error matching against person ${personId}: ${error}\n`;
+        resultsLog += `Error matching against image ${imageId}: ${error}\n`;
       }
     }
 
@@ -809,7 +812,7 @@ const GuardianVision: React.FC = () => {
       // Create encodings for this image
       const encodings = detections.map((detection, i) => ({
         descriptor: detection.descriptor,
-        label: `Person_${index + 1}_${i + 1}`
+        label: `Image_${index + 1}_${i + 1}`
       }));
 
       // Extract descriptors
@@ -1235,7 +1238,11 @@ const GuardianVision: React.FC = () => {
     return (
       <div className="loading-message">
         <div className="loading-spinner" />
-        <h2>Loading Face Detection Models...</h2>
+        <h2 className="loading-title">Loading Face Detection Models</h2>
+        <p className="loading-subtitle">Preparing advanced facial recognition capabilities...</p>
+        <div className="loading-progress">
+          <div className="loading-progress-bar"></div>
+        </div>
       </div>
     );
   }
@@ -1977,7 +1984,14 @@ const GuardianVision: React.FC = () => {
         {/* Match results debug panel */}
         {matchResults && (
           <div className={`match-results-debug ${matchResults.includes('NO MATCH') ? 'no-match' : 'match'}`}>
-            <pre>{matchResults}</pre>
+            <button
+              className="debug-panel-toggle"
+              onClick={() => setIsDebugPanelExpanded(!isDebugPanelExpanded)}
+              title={isDebugPanelExpanded ? "Collapse" : "Expand"}
+            >
+              {isDebugPanelExpanded ? "−" : "+"}
+            </button>
+            <pre className={isDebugPanelExpanded ? "expanded" : "collapsed"}>{matchResults}</pre>
           </div>
         )}
         {processedFaces.length > 0 && (
