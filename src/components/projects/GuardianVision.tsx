@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 import './GuardianVision.css';
+import { useFaceApiModels } from '../../hooks/useFaceApiModels';
 
 interface FaceMatch {
   label: string;
@@ -75,20 +76,22 @@ const GuardianVision: React.FC = () => {
   const mediaCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // All useEffect hooks
-  useEffect(() => {
-    const checkModelsLoaded = async () => {
-      try {
-        await loadModels();
-        setModelsLoaded(true);
-      } catch (error) {
-        setModelError('Failed to load face detection models. Please refresh the page.');
-        console.error('Model loading error:', error);
-      }
-    };
+  // Import the custom hook for model loading
+  const MODEL_URL = `${window.location.origin}/weights`;
+  const { error: modelsError, modelsLoaded: faceApiModelsLoaded } = useFaceApiModels(MODEL_URL);
 
-    checkModelsLoaded();
-  }, []);
+  // Update state based on the hook results
+  useEffect(() => {
+    if (modelsError) {
+      setModelError('Failed to load face detection models. Please refresh the page.');
+      console.error('Model loading error:', modelsError);
+    }
+
+    if (faceApiModelsLoaded) {
+      setModelsLoaded(true);
+      console.log('Face API models loaded and ready to use');
+    }
+  }, [modelsError, faceApiModelsLoaded]);
 
   useEffect(() => {
     return () => {
@@ -124,40 +127,7 @@ const GuardianVision: React.FC = () => {
     objectFit: 'cover' as const
   };
 
-  const loadModels = async () => {
-    try {
-      setIsProcessing(true);
-      const MODEL_URL = `${window.location.origin}/weights`;
-
-      const modelsToLoad = [
-        { net: faceapi.nets.ssdMobilenetv1, name: 'SSD MobileNet' },
-        { net: faceapi.nets.faceLandmark68Net, name: 'Face Landmark' },
-        { net: faceapi.nets.faceRecognitionNet, name: 'Face Recognition' },
-        { net: faceapi.nets.faceExpressionNet, name: 'Face Expression' }
-      ];
-
-      const loadPromises = modelsToLoad
-        .filter(model => !model.net.isLoaded)
-        .map(async model => {
-          await model.net.loadFromUri(MODEL_URL);
-          console.log(`${model.name} loaded`);
-        });
-
-      if (loadPromises.length > 0) {
-        await Promise.all(loadPromises);
-        console.log('All required models loaded');
-      } else {
-        console.log('Models already loaded');
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error loading models:', error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  // Model loading is now handled by the useFaceApiModels hook
 
   // Note: processSourceImage has been replaced by processReferenceImage
   // which supports multiple reference images for better face recognition
@@ -693,13 +663,20 @@ const GuardianVision: React.FC = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Store the files for later processing
+    // Get current pending images and add the new ones
+    const currentPendingImages = [...pendingImages];
     const fileArray = Array.from(files);
-    setPendingImages(fileArray);
+
+    // Add new files to the existing array
+    const combinedFiles = [...currentPendingImages, ...fileArray];
+
+    // Limit to maxAllowedImages if needed
+    const finalFiles = combinedFiles.slice(0, maxAllowedImages);
+    setPendingImages(finalFiles);
 
     // Check if we have multiple files
-    const fileCount = fileArray.length;
-    console.log(`Added ${fileCount} reference images ready to process`);
+    const fileCount = finalFiles.length;
+    console.log(`Added new images. Total: ${fileCount} reference images ready to process`);
 
     // Update reference images count (but don't process yet)
     setReferenceImagesCount(fileCount);
@@ -1029,10 +1006,20 @@ const GuardianVision: React.FC = () => {
       // Stop any existing webcam stream
       stopWebcam();
 
-      // Ensure models are loaded
-      if (!modelsLoaded) {
-        console.log('Loading face detection models...');
-        await loadModels();
+      // Models should already be loaded by the useFaceApiModels hook
+      if (!faceApiModelsLoaded) {
+        console.log('Waiting for face detection models to load...');
+        // Wait for models to load instead of trying to load them directly
+        await new Promise(resolve => {
+          const checkModels = () => {
+            if (faceApiModelsLoaded) {
+              resolve(true);
+            } else {
+              setTimeout(checkModels, 500);
+            }
+          };
+          checkModels();
+        });
       }
 
       // Set up camera constraints
@@ -1258,7 +1245,39 @@ const GuardianVision: React.FC = () => {
       setShowCamera(true);
       setSelectedSource(null);
     } else {
-      setSelectedSource(prevSource => prevSource === optionId ? null : optionId);
+      // Always set the selected source to the option clicked
+      // This ensures the upload UI stays visible when clicking on it again
+      setSelectedSource(optionId);
+
+      // If it's the image option and we have pending images, show them
+      if (optionId === 'image' && pendingImages.length > 0) {
+        // Generate preview images for any pending images that don't have previews yet
+        const previewPendingImages = async () => {
+          // Only generate previews if we don't have source images yet
+          if (sourceImages.length < pendingImages.length) {
+            const newSourceImages = [...sourceImages];
+
+            // Generate previews for any new pending images
+            for (let i = sourceImages.length; i < pendingImages.length; i++) {
+              const file = pendingImages[i];
+              const imageData = await readFileAsDataURL(file);
+              if (imageData) {
+                newSourceImages.push(imageData);
+              }
+            }
+
+            // Update source images with previews
+            if (newSourceImages.length > sourceImages.length) {
+              setSourceImages(newSourceImages);
+              if (!sourceImage && newSourceImages.length > 0) {
+                setSourceImage(newSourceImages[0]);
+              }
+            }
+          }
+        };
+
+        previewPendingImages();
+      }
     }
   };
 
@@ -1746,7 +1765,13 @@ const GuardianVision: React.FC = () => {
               <motion.button
                 key={option.id}
                 className={`source-option ${selectedSource === option.id ? 'selected' : ''}`}
-                onClick={() => handleSourceOptionClick(option.id)}
+                onClick={() => {
+                  handleSourceOptionClick(option.id);
+                  // If there are pending images, show them
+                  if (option.id === 'image' && pendingImages.length > 0) {
+                    setImagesReadyToProcess(true);
+                  }
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1770,7 +1795,12 @@ const GuardianVision: React.FC = () => {
                   }}
                   className="file-input"
                 />
-                <span>Choose files or drag them here (3-5 recommended)</span>
+                <span>
+                  {pendingImages.length > 0
+                    ? `${pendingImages.length} files selected (${minRecommendedImages}-${maxAllowedImages} recommended)`
+                    : `Choose files or drag them here (${minRecommendedImages}-${maxAllowedImages} recommended)`
+                  }
+                </span>
               </label>
 
               {/* Process button - only shown when images are ready to process */}
