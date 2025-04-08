@@ -7,9 +7,10 @@ interface LocalMediaProps {
   faceMatcher: faceapi.FaceMatcher | null;
   onClose: () => void;
   matchThreshold: number;
+  handleMatch?: (match: any) => void;
 }
 
-const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThreshold }) => {
+const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThreshold, handleMatch }) => {
   // State for media type selection
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
 
@@ -106,9 +107,22 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
 
           resultsLog += `Face #${i + 1}: ${bestMatch.toString()}\n`;
 
+          // Always record the match result, whether found or not
+          if (handleMatch) {
+            handleMatch({
+              label: bestMatch.label !== 'unknown' ? bestMatch.label : 'Unknown Person',
+              distance: bestMatch.distance,
+              confidence: (1 - bestMatch.distance) * 100,
+              timestamp: new Date()
+            });
+          }
+
+          // Update UI based on match status
           if (bestMatch.label !== 'unknown') {
             foundMatch = true;
             resultsLog += `MATCH FOUND! Confidence: ${((1 - bestMatch.distance) * 100).toFixed(2)}%\n`;
+          } else {
+            resultsLog += `No match found. Best distance: ${bestMatch.distance.toFixed(2)}\n`;
           }
         }
       }
@@ -189,9 +203,22 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
 
           resultsLog += `Face #${i + 1}: ${bestMatch.toString()}\n`;
 
+          // Always record the match result, whether found or not
+          if (handleMatch) {
+            handleMatch({
+              label: bestMatch.label !== 'unknown' ? bestMatch.label : 'Unknown Person',
+              distance: bestMatch.distance,
+              confidence: (1 - bestMatch.distance) * 100,
+              timestamp: new Date()
+            });
+          }
+
+          // Update UI based on match status
           if (bestMatch.label !== 'unknown') {
             foundMatch = true;
             resultsLog += `MATCH FOUND! Confidence: ${((1 - bestMatch.distance) * 100).toFixed(2)}%\n`;
+          } else {
+            resultsLog += `No match found. Best distance: ${bestMatch.distance.toFixed(2)}\n`;
           }
         }
       }
@@ -428,7 +455,7 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
                     }
                   }}
                 />
-                <canvas ref={canvasRef} className="detection-canvas"></canvas>
+                <canvas ref={canvasRef} className="detection-canvas" data-will-read-frequently="true"></canvas>
               </div>
             )}
 
@@ -446,7 +473,7 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
                   playsInline
                   crossOrigin="anonymous"
                 ></video>
-                <canvas ref={canvasRef} className="detection-canvas"></canvas>
+                <canvas ref={canvasRef} className="detection-canvas" data-will-read-frequently="true"></canvas>
 
                 {isVideoLoaded && (
                   <div className="video-controls">

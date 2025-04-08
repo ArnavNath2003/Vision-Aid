@@ -12,16 +12,20 @@ import * as faceapi from 'face-api.js';
 import './GuardianVision.css';
 import { useFaceApiModels } from '../../hooks/useFaceApiModels';
 import LocalMedia from './LocalMedia';
+// Import Dashboard component
+import DashboardComponent from './Dashboard';
 
-interface FaceMatch {
+export interface FaceMatch {
   label: string;
   distance: number;
   timestamp: Date;
   location?: GeolocationPosition;
   confidence: number;
+  found?: boolean;
+  source?: string;
 }
 
-interface ProcessedFace {
+export interface ProcessedFace {
   descriptor: Float32Array;
   detection: faceapi.FaceDetection;
   landmarks: faceapi.FaceLandmarks68;
@@ -70,6 +74,7 @@ const GuardianVision: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
   const [matchThresholdSlider, setMatchThresholdSlider] = useState(60);
   const [showDashboard, setShowDashboard] = useState(false);
+  // We'll use the existing referenceImagesCount state
 
   // All refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1049,6 +1054,8 @@ const GuardianVision: React.FC = () => {
     setProcessedFaces([]);
     if (sourceImages.length === 0 && !sourceImage) {
       alert('Please upload at least one reference image first');
+      // Redirect to the upload section
+      setSelectedSource('upload');
       return;
     }
 
@@ -1427,7 +1434,8 @@ const GuardianVision: React.FC = () => {
   };
 
   const renderActionButton = () => {
-    if (!sourceImage) return null;
+    // Always show the button, but disable it if no source image
+    const noSourceImage = !sourceImage;
 
     return (
       <div className="webcam-controls">
@@ -1436,6 +1444,7 @@ const GuardianVision: React.FC = () => {
             className="webcam-button start-button"
             onClick={startWebcam}
             disabled={isProcessing}
+            title={noSourceImage ? 'Please upload reference images first' : 'Start face detection'}
           >
             <Camera size={20} />
             Start Detection
@@ -1594,7 +1603,7 @@ const GuardianVision: React.FC = () => {
             playsInline
             className="camera-preview"
           />
-          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          <canvas ref={canvasRef} style={{ display: 'none' }} data-will-read-frequently="true" />
           <div className="camera-controls">
             <button onClick={captureImage} className="capture-button">
               Take Photo
@@ -1609,10 +1618,31 @@ const GuardianVision: React.FC = () => {
   };
 
   const exportMatchHistory = () => {
-    const dataStr = JSON.stringify(matchHistory, null, 2);
+    // Create a comprehensive export object with all relevant data
+    const exportData = {
+      matchHistory,
+      processedFaces: processedFaces.map(face => ({
+        // Convert Float32Array to regular array for JSON serialization
+        descriptor: Array.from(face.descriptor),
+        detection: {
+          box: face.detection.box,
+          score: face.detection.score,
+          classScore: face.detection.classScore
+        },
+        match: face.match
+      })),
+      stats: {
+        totalSearches: matchHistory.length,
+        matchesFound: matchHistory.filter(match => match.distance < 0.6).length,
+        referenceImagesCount: sourceImages.length,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
 
-    const exportFileDefaultName = 'face-matches.json';
+    const exportFileDefaultName = 'guardian-vision-data.json';
 
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -1715,74 +1745,40 @@ const GuardianVision: React.FC = () => {
     );
   };
 
-  const Dashboard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    return (
-      <div className="dashboard-overlay">
-        <div className="dashboard-content">
-          <h2>Match Dashboard</h2>
-
-          <div className="dashboard-stats">
-            <div className="stat-card">
-              <h3>Total Matches</h3>
-              <p>{matchHistory.length}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Average Confidence</h3>
-              <p>
-                {matchHistory.length > 0
-                  ? (matchHistory.reduce((sum, match) => sum + match.confidence, 0) / matchHistory.length).toFixed(2)
-                  : '0.00'}%
-              </p>
-            </div>
-            <div className="stat-card">
-              <h3>Latest Match</h3>
-              <p>
-                {matchHistory.length > 0
-                  ? new Date(matchHistory[matchHistory.length - 1].timestamp).toLocaleTimeString()
-                  : 'None'}
-              </p>
-            </div>
-          </div>
-
-          <div className="match-history">
-            <h3>Recent Matches</h3>
-            <div className="match-list">
-              {matchHistory.slice(-5).reverse().map((match, index) => (
-                <div key={index} className="match-item">
-                  <div className="match-time">
-                    {new Date(match.timestamp).toLocaleTimeString()}
-                  </div>
-                  <div className="match-confidence">
-                    Confidence: {match.confidence.toFixed(2)}%
-                  </div>
-                  {match.location && (
-                    <div className="match-location">
-                      Location: {match.location.coords.latitude.toFixed(4)}, {match.location.coords.longitude.toFixed(4)}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="dashboard-actions">
-            <button onClick={exportMatchHistory}>Export Data</button>
-            <button onClick={clearMatchHistory}>Clear History</button>
-            <button onClick={onClose}>Close</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Old Dashboard component removed
 
   const handleMatch = (match: FaceMatch) => {
-    setMatchHistory(prev => [match, ...prev]);
+    // Determine if this is a successful match based on the distance
+    const isFound = match.distance < 0.6; // Threshold for considering a match as "found"
+
+    // Determine the source based on selected sinks or current context
+    let source = 'unknown';
+    if (selectedSinks.length > 0) {
+      source = selectedSinks[0];
+    } else if (showLocalMedia) {
+      source = 'local';
+    } else if (isWebcamActive) {
+      source = 'webcam';
+    }
+
+    // Add found property and source to the match
+    const enhancedMatch = {
+      ...match,
+      found: isFound,
+      source: source,
+      timestamp: new Date() // Ensure we have a timestamp
+    };
+
+    // Update match history
+    console.log('Adding match to history:', enhancedMatch);
+    setMatchHistory(prev => [enhancedMatch, ...prev]);
+
     if (geolocationEnabled) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCurrentLocation(position);
           setMatchHistory(prev => [{
-            ...match,
+            ...enhancedMatch,
             location: position
           }, ...prev.slice(1)]);
         },
@@ -1800,28 +1796,30 @@ const GuardianVision: React.FC = () => {
           <ArrowLeft />
           <span>Back to Projects</span>
         </Link>
-        <div className="theme-switch-wrapper">
-          <label className="guardian-theme-switch">
-            <input
-              type="checkbox"
-              checked={!isDarkMode}
-              onChange={() => setIsDarkMode(!isDarkMode)}
-            />
-            <div className="guardian-slider">
-              <div className="guardian-gooey-ball"></div>
-              <div className="guardian-gooey-icons">
-                <svg className="guardian-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="4" fill="currentColor"/>
-                  <path d="M12 5V3M12 21v-2M5 12H3m18 0h-2M6.4 6.4L5 5m12.6 12.6l1.4 1.4M6.4 17.6L5 19m12.6-12.6L19 5"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <svg className="guardian-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+        <div className="header-controls">
+          <div className="theme-switch-wrapper">
+            <label className="guardian-theme-switch">
+              <input
+                type="checkbox"
+                checked={!isDarkMode}
+                onChange={() => setIsDarkMode(!isDarkMode)}
+              />
+              <div className="guardian-slider">
+                <div className="guardian-gooey-ball"></div>
+                <div className="guardian-gooey-icons">
+                  <svg className="guardian-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                    <path d="M12 5V3M12 21v-2M5 12H3m18 0h-2M6.4 6.4L5 5m12.6 12.6l1.4 1.4M6.4 17.6L5 19m12.6-12.6L19 5"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <svg className="guardian-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
-            </div>
-          </label>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -1885,6 +1883,15 @@ const GuardianVision: React.FC = () => {
               />
               Offline Mode
             </label>
+          </div>
+
+          <div className="dashboard-button-container">
+            <button
+              className="dashboard-open-button"
+              onClick={() => setShowDashboard(true)}
+            >
+              Open Dashboard
+            </button>
           </div>
 
           <div className="advanced-settings">
@@ -2213,11 +2220,9 @@ const GuardianVision: React.FC = () => {
             </div>
 
             {/* Detection button moved inside testing section */}
-            {selectedSinks.includes('webcam') && sourceImage && (
-              <div className="detection-controls">
-                {renderActionButton()}
-              </div>
-            )}
+            <div className="detection-controls">
+              {renderActionButton()}
+            </div>
           </div>
         </section>
 
@@ -2238,6 +2243,7 @@ const GuardianVision: React.FC = () => {
         <canvas
           ref={webcamCanvasRef}
           className="webcam-overlay"
+          data-will-read-frequently="true"
         />
 
         {/* Match results debug panel */}
@@ -2296,7 +2302,19 @@ const GuardianVision: React.FC = () => {
 
       {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
-      {showDashboard && <Dashboard onClose={() => setShowDashboard(false)} />}
+      {/* Dashboard Component */}
+      {showDashboard && (
+        <div>
+          {/* Use type assertion to fix TypeScript error */}
+          {React.createElement(DashboardComponent as any, {
+            onClose: () => setShowDashboard(false),
+            processedFaces,
+            matchHistory,
+            referenceImagesCount: sourceImages.length,
+            clearHistory: clearMatchHistory
+          })}
+        </div>
+      )}
 
       {/* Local Media Component */}
       {showLocalMedia && faceMatcher && (
@@ -2304,6 +2322,7 @@ const GuardianVision: React.FC = () => {
           faceMatcher={faceMatcher}
           onClose={() => setShowLocalMedia(false)}
           matchThreshold={matchThreshold}
+          handleMatch={handleMatch}
         />
       )}
 
