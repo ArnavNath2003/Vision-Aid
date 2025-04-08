@@ -75,6 +75,184 @@
   backdrop-filter: blur(5px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Feature badge styling */
+.feature-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.2), rgba(147, 112, 219, 0.2));
+  color: rgba(255, 255, 255, 0.9);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(147, 112, 219, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 8px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Metrics Panel Styling */
+.metrics-panel {
+  position: relative;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  margin: 30px auto;
+  max-width: 800px;
+  width: 90%;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.5s ease-out;
+  z-index: 20; /* Ensure it's above other elements */
+}
+
+.metrics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(90deg,
+    rgba(70, 130, 180, 0.3),
+    rgba(147, 112, 219, 0.3)
+  );
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metrics-header:hover {
+  background: linear-gradient(90deg,
+    rgba(70, 130, 180, 0.4),
+    rgba(147, 112, 219, 0.4)
+  );
+}
+
+.metrics-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.metrics-toggle {
+  width: 24px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.metrics-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.metrics-content {
+  transition: all 0.3s ease;
+  padding: 0 20px;
+}
+
+.metrics-content.expanded {
+  max-height: 300px; /* Reduced max height */
+  padding: 20px;
+  opacity: 1;
+  overflow-y: auto; /* Add vertical scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(147, 112, 219, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+.metrics-content.expanded::-webkit-scrollbar {
+  width: 8px;
+}
+
+.metrics-content.expanded::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.metrics-content.expanded::-webkit-scrollbar-thumb {
+  background: rgba(147, 112, 219, 0.5);
+  border-radius: 10px;
+}
+
+.metrics-content.collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.processed-face-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.processed-face-info:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metric-row:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.metric-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.metric-value {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.confidence-value {
+  color: #4CAF50;
+}
+
+.status-match {
+  color: #4CAF50;
+}
+
+.status-nomatch {
+  color: #ff6b6b;
 }
 
 /* Add gradient animation */
@@ -712,6 +890,80 @@
   overflow: hidden;
   padding: 0;
   margin: 0;
+}
+
+/* Search and Testing Container */
+.search-and-testing-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+}
+
+.sink-section, .testing-section {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Add a disabled state for sections */
+.sink-section.disabled, .testing-section.disabled {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  pointer-events: none;
+}
+
+/* Add a note about mutual exclusivity */
+.search-and-testing-container {
+  position: relative;
+}
+
+.search-and-testing-container::before {
+  content: "Select one option from either section";
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 5px 15px;
+  border-radius: 20px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.testing-section {
+  background: rgba(70, 130, 180, 0.1);
+  border: 1px solid rgba(70, 130, 180, 0.2);
+}
+
+.sink-section h2, .testing-section h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.testing-section h2 {
+  color: rgba(147, 112, 219, 1);
+}
+
+.testing-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
 }
 
 /* Match found styling */

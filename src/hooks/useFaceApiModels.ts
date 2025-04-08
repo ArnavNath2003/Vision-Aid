@@ -26,26 +26,28 @@ export const useFaceApiModels = (modelUrl: string) => {
 
         // Define models to load
         const modelsToLoad: ModelInfo[] = [
-          { 
-            net: faceapi.nets.ssdMobilenetv1, 
-            name: 'ssd_mobilenetv1_model', 
-            uri: `${modelUrl}/ssd_mobilenetv1_model-weights_manifest.json` 
+          {
+            net: faceapi.nets.ssdMobilenetv1,
+            name: 'ssd_mobilenetv1_model',
+            uri: `${modelUrl}/ssd_mobilenetv1_model-weights_manifest.json`
           },
-          { 
-            net: faceapi.nets.faceLandmark68Net, 
-            name: 'face_landmark_68_model', 
-            uri: `${modelUrl}/face_landmark_68_model-weights_manifest.json` 
+          {
+            net: faceapi.nets.faceLandmark68Net,
+            name: 'face_landmark_68_model',
+            uri: `${modelUrl}/face_landmark_68_model-weights_manifest.json`
           },
-          { 
-            net: faceapi.nets.faceRecognitionNet, 
-            name: 'face_recognition_model', 
-            uri: `${modelUrl}/face_recognition_model-weights_manifest.json` 
+          {
+            net: faceapi.nets.faceRecognitionNet,
+            name: 'face_recognition_model',
+            uri: `${modelUrl}/face_recognition_model-weights_manifest.json`
           },
-          { 
-            net: faceapi.nets.faceExpressionNet, 
-            name: 'face_expression_model', 
-            uri: `${modelUrl}/face_expression_model-weights_manifest.json` 
-          }
+          {
+            net: faceapi.nets.faceExpressionNet,
+            name: 'face_expression_model',
+            uri: `${modelUrl}/face_expression_model-weights_manifest.json`
+          },
+          // MTCNN model is not included as it's not available locally
+          // We'll use SSD MobileNet as our primary face detector
         ];
 
         // Load each model, checking IndexedDB first
@@ -57,7 +59,7 @@ export const useFaceApiModels = (modelUrl: string) => {
 
           // Check if model exists in IndexedDB
           const modelExists = await modelExistsInIndexedDB(model.name);
-          
+
           if (modelExists) {
             // Load from IndexedDB
             console.log(`Loading ${model.name} from IndexedDB`);
@@ -73,7 +75,7 @@ export const useFaceApiModels = (modelUrl: string) => {
                 // Fallback to loading from URL
                 await model.net.loadFromUri(modelUrl);
                 console.log(`${model.name} loaded from URL (IndexedDB retrieval failed)`);
-                
+
                 // Save to IndexedDB for next time
                 // Note: This is a simplified example - actual implementation would need to serialize the model
                 // In practice, we'd need to get the model weights as ArrayBuffer
@@ -90,7 +92,7 @@ export const useFaceApiModels = (modelUrl: string) => {
             console.log(`Loading ${model.name} from URL`);
             await model.net.loadFromUri(modelUrl);
             console.log(`${model.name} loaded from URL`);
-            
+
             // Save to IndexedDB for next time
             // Note: This is a simplified example - actual implementation would need to serialize the model
             // In practice, we'd need to get the model weights as ArrayBuffer

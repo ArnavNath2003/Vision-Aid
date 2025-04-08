@@ -135,8 +135,9 @@ const GuardianVision: React.FC = () => {
   // Create a state variable to store the latest match results for display
   const [matchResults, setMatchResults] = useState<string>('');
 
-  // State to track whether the debug panel is expanded or collapsed
+  // State to track whether panels are expanded or collapsed
   const [isDebugPanelExpanded, setIsDebugPanelExpanded] = useState<boolean>(false); // Collapsed by default
+  const [isMetricsPanelExpanded, setIsMetricsPanelExpanded] = useState<boolean>(false); // Collapsed by default
 
   // Create refs to store the last dimensions and counts for logging optimization
   const lastWidthRef = useRef<number>(0);
@@ -295,10 +296,24 @@ const GuardianVision: React.FC = () => {
         return [];
       }
 
-      const detectionOptions = performanceMode ? {
-        scoreThreshold: 0.5,
-        inputSize: 224
-      } as faceapi.TinyYolov2Options : undefined;
+      // Determine which face detection model to use
+      let detectionOptions;
+
+      if (performanceMode) {
+        // Use TinyYolov2 in performance mode
+        detectionOptions = new faceapi.TinyYolov2Options({
+          scoreThreshold: 0.5,
+          inputSize: 224
+        });
+      } else {
+        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
+        detectionOptions = new faceapi.SsdMobilenetv1Options({
+          // Use a very low confidence threshold to detect more faces
+          minConfidence: 0.2,
+          // Increase the number of results to consider more potential faces
+          maxResults: 15
+        });
+      }
 
       // Detect faces
       // Increment frame counter
@@ -463,8 +478,9 @@ const GuardianVision: React.FC = () => {
           } : undefined
         };
 
-        // Update processed faces (limit to last 5 to avoid memory issues)
+        // Update processed faces (only keep faces from the current session)
         setProcessedFaces(prev => {
+          // Only keep up to 5 most recent faces to avoid clutter
           const newFaces = [...prev, processedFace];
           return newFaces.slice(-5); // Keep only the last 5 faces
         });
@@ -713,6 +729,9 @@ const GuardianVision: React.FC = () => {
       setIsProcessing(true);
       setUploadProgress(10);
 
+      // Clear previous processed faces when starting a new processing session
+      setProcessedFaces([]);
+
       // Process all images
       const fileCount = pendingImages.length;
       const newSourceImages: string[] = [];
@@ -759,6 +778,10 @@ const GuardianVision: React.FC = () => {
 
           console.log(`Created face matcher with ${allDescriptors.length} descriptors`);
           setSelectedSource('upload');
+        } else {
+          // Show a helpful error message if no faces were detected
+          alert('No faces were detected in your reference images. Please try different images with clearer faces, better lighting, or more frontal face angles.');
+          console.warn('No face descriptors were generated from the reference images');
         }
       }
 
@@ -798,7 +821,16 @@ const GuardianVision: React.FC = () => {
     try {
       console.log(`Processing reference image ${index + 1}`);
 
-      const detections = await faceapi.detectAllFaces(img)
+      // Use SSD MobileNet with very permissive parameters to detect more challenging faces
+      const ssdOptions = new faceapi.SsdMobilenetv1Options({
+        // Use a very low confidence threshold to detect more faces
+        minConfidence: 0.2,
+        // Increase the number of results to consider more potential faces
+        maxResults: 15
+      });
+
+      console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
+      const detections = await faceapi.detectAllFaces(img, ssdOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
 
@@ -985,6 +1017,8 @@ const GuardianVision: React.FC = () => {
   };
 
   const startWebcam = async () => {
+    // Clear processed faces when starting a new webcam session
+    setProcessedFaces([]);
     if (sourceImages.length === 0 && !sourceImage) {
       alert('Please upload at least one reference image first');
       return;
@@ -999,7 +1033,7 @@ const GuardianVision: React.FC = () => {
     // Check if we have face encodings to match against
     if (faceEncodings.length === 0) {
       console.warn('No face encodings available for matching');
-      alert('No face encodings available. Please upload a source image with a detectable face.');
+      alert('No faces were detected in your reference images. Please try different images with clearer faces, better lighting, or more frontal face angles.');
       return;
     }
 
@@ -1148,13 +1182,61 @@ const GuardianVision: React.FC = () => {
   };
 
   const renderProcessedFaces = () => {
-    return processedFaces.map((face, index) => (
-      <div key={index} className="processed-face-info">
-        {face.match && (
-          <p>Match confidence: {(1 - face.match.distance) * 100}%</p>
-        )}
+    if (processedFaces.length === 0) return null;
+
+    // Get only the faces from the current session (based on sourceImages count)
+    const currentSessionFaces = processedFaces.slice(-Math.min(processedFaces.length, sourceImages.length));
+
+    if (currentSessionFaces.length === 0) return null;
+
+    return (
+      <div className="metrics-panel">
+        <div className="metrics-header" onClick={() => setIsMetricsPanelExpanded(!isMetricsPanelExpanded)}>
+          <h3>Face Recognition Metrics</h3>
+          <button
+            className="metrics-toggle"
+            title={isMetricsPanelExpanded ? "Collapse" : "Expand"}
+          >
+            {isMetricsPanelExpanded ? "−" : "+"}
+          </button>
+        </div>
+
+        <div className={`metrics-content ${isMetricsPanelExpanded ? 'expanded' : 'collapsed'}`}>
+          {currentSessionFaces.map((face, index) => (
+            <div key={index} className="processed-face-info">
+              <div className="metric-row">
+                <span className="metric-label">Face ID:</span>
+                <span className="metric-value">Image_{index + 1}</span>
+              </div>
+
+              {face.match && (
+                <>
+                  <div className="metric-row">
+                    <span className="metric-label">Match Confidence:</span>
+                    <span className="metric-value confidence-value">
+                      {((1 - face.match.distance) * 100).toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Distance Score:</span>
+                    <span className="metric-value">
+                      {face.match.distance.toFixed(4)}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              <div className="metric-row">
+                <span className="metric-label">Status:</span>
+                <span className={`metric-value status-value ${face.match ? 'status-match' : 'status-nomatch'}`}>
+                  {face.match ? 'MATCH FOUND' : 'NO MATCH'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    ));
+    );
   };
 
   const sourceOptions = [
@@ -1162,10 +1244,15 @@ const GuardianVision: React.FC = () => {
     { id: 'webcam', label: 'Camera', icon: <Camera /> },
   ];
 
+  // Real-world search sources
   const sinkOptions = [
     { id: 'cctv', label: 'CCTV Cameras', icon: <Camera /> },
     { id: 'drones', label: 'Drones', icon: <Plane /> },
     { id: 'local', label: 'Local Media', icon: <Upload /> },
+  ];
+
+  // Testing options
+  const testingOptions = [
     { id: 'webcam', label: 'Live Webcam', icon: <Camera /> },
   ];
 
@@ -1192,7 +1279,15 @@ const GuardianVision: React.FC = () => {
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const detections = await faceapi.detectAllFaces(canvas)
+      // Use SSD MobileNet with very permissive parameters to detect more challenging faces
+      const ssdOptions = new faceapi.SsdMobilenetv1Options({
+        // Use a very low confidence threshold to detect more faces
+        minConfidence: 0.2,
+        // Increase the number of results to consider more potential faces
+        maxResults: 15
+      });
+
+      const detections = await faceapi.detectAllFaces(canvas, ssdOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
 
@@ -1248,6 +1343,9 @@ const GuardianVision: React.FC = () => {
   }
 
   const handleSourceOptionClick = (optionId: string) => {
+    // Clear processed faces when switching sources
+    setProcessedFaces([]);
+
     if (optionId === 'webcam') {
       setShowCamera(true);
       setSelectedSource(null);
@@ -1641,6 +1739,7 @@ const GuardianVision: React.FC = () => {
         <h1 className="title">Guardian Vision</h1>
         <p className="description">
           Advanced facial recognition system for locating missing persons through multiple surveillance sources.
+          <span className="feature-badge">Optimized for improved side-profile detection</span>
         </p>
 
         <div className="settings-panel">
@@ -1938,27 +2037,58 @@ const GuardianVision: React.FC = () => {
           )}
         </section>
 
-        <section className="sink-section">
-          <h2>Select Search Sources</h2>
-          <div className="sink-options">
-            {sinkOptions.map((option) => (
-              <motion.button
-                key={option.id}
-                className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''}`}
-                onClick={() => {
-                  setSelectedSinks(prev =>
-                    prev.includes(option.id)
-                      ? prev.filter(id => id !== option.id)
-                      : [...prev, option.id]
-                  );
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {option.icon}
-                <span>{option.label}</span>
-              </motion.button>
-            ))}
+        <section className="search-and-testing-container">
+          <div className={`sink-section ${selectedSinks.some(id => testingOptions.some(opt => opt.id === id)) ? 'disabled' : ''}`}>
+            <h2>Select Search Sources</h2>
+            <div className="sink-options">
+              {sinkOptions.map((option) => (
+                <motion.button
+                  key={option.id}
+                  className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''}`}
+                  onClick={() => {
+                    // If this option is already selected, deselect it
+                    if (selectedSinks.includes(option.id)) {
+                      setSelectedSinks([]);
+                    } else {
+                      // Otherwise, clear all selections and select only this one
+                      // Also clear any testing options
+                      setSelectedSinks([option.id]);
+                    }
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {option.icon}
+                  <span>{option.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          <div className={`testing-section ${selectedSinks.some(id => sinkOptions.some(opt => opt.id === id)) ? 'disabled' : ''}`}>
+            <h2>Testing</h2>
+            <div className="testing-options">
+              {testingOptions.map((option) => (
+                <motion.button
+                  key={option.id}
+                  className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''}`}
+                  onClick={() => {
+                    // If this option is already selected, deselect it
+                    if (selectedSinks.includes(option.id)) {
+                      setSelectedSinks([]);
+                    } else {
+                      // Otherwise, clear all selections and select only this testing option
+                      setSelectedSinks([option.id]);
+                    }
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {option.icon}
+                  <span>{option.label}</span>
+                </motion.button>
+              ))}
+            </div>
           </div>
         </section>
 
