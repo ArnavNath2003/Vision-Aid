@@ -11,6 +11,7 @@ import {
 import * as faceapi from 'face-api.js';
 import './GuardianVision.css';
 import { useFaceApiModels } from '../../hooks/useFaceApiModels';
+import LocalMedia from './LocalMedia';
 
 interface FaceMatch {
   label: string;
@@ -144,6 +145,9 @@ const GuardianVision: React.FC = () => {
   const [showDroneSettings, setShowDroneSettings] = useState<boolean>(false);
   const [cctvConnected, setCctvConnected] = useState<boolean>(false);
   const [droneConnected, setDroneConnected] = useState<boolean>(false);
+
+  // State for LocalMedia component
+  const [showLocalMedia, setShowLocalMedia] = useState<boolean>(false);
 
   // CCTV connection settings
   const [cctvSettings, setCctvSettings] = useState({
@@ -1381,6 +1385,10 @@ const GuardianVision: React.FC = () => {
       // Show drone connection settings
       setShowDroneSettings(true);
       setSelectedSource(null);
+    } else if (optionId === 'local') {
+      // Show local media component
+      setShowLocalMedia(true);
+      setSelectedSource(null);
     } else {
       // Always set the selected source to the option clicked
       // This ensures the upload UI stays visible when clicking on it again
@@ -2163,6 +2171,9 @@ const GuardianVision: React.FC = () => {
                         } else {
                           setShowDroneSettings(true);
                         }
+                      } else if (option.id === 'local') {
+                        // Show local media component
+                        setShowLocalMedia(true);
                       }
                     }
                   }}
@@ -2279,6 +2290,15 @@ const GuardianVision: React.FC = () => {
       {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
       {showDashboard && <Dashboard onClose={() => setShowDashboard(false)} />}
+
+      {/* Local Media Component */}
+      {showLocalMedia && faceMatcher && (
+        <LocalMedia
+          faceMatcher={faceMatcher}
+          onClose={() => setShowLocalMedia(false)}
+          matchThreshold={matchThreshold}
+        />
+      )}
 
       {/* CCTV Settings Modal */}
       {showCctvSettings && (
