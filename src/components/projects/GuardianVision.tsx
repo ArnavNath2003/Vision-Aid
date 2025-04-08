@@ -2211,10 +2211,17 @@ const GuardianVision: React.FC = () => {
                 </motion.button>
               ))}
             </div>
+
+            {/* Detection button moved inside testing section */}
+            {selectedSinks.includes('webcam') && sourceImage && (
+              <div className="detection-controls">
+                {renderActionButton()}
+              </div>
+            )}
           </div>
         </section>
 
-        {renderActionButton()}
+        {/* Original action button position - removed */}
       </motion.main>
 
       <div

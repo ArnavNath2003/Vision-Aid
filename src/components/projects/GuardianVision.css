@@ -967,6 +967,15 @@
   justify-content: center;
 }
 
+/* Detection controls in testing section */
+.detection-controls {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
+}
+
 /* Connected indicator */
 .guardian-vision-container .sink-option.connected::after {
   content: '';
@@ -1494,7 +1503,9 @@
   height: 48px;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
@@ -1502,8 +1513,9 @@
 }
 
 .start-button {
-  background-color: var(--primary-color, #4CAF50);
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.9), rgba(147, 112, 219, 0.9));
   color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .stop-button {
@@ -1514,7 +1526,11 @@
 
 .webcam-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.start-button:hover {
+  background: linear-gradient(135deg, rgba(70, 130, 180, 1), rgba(147, 112, 219, 1));
 }
 
 .webcam-button:active {

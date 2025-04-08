@@ -12,28 +12,28 @@ interface LocalMediaProps {
 const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThreshold }) => {
   // State for media type selection
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
-  
+
   // State for file handling
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
-  
+
   // State for processing
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [matchResults, setMatchResults] = useState<string>('');
   const [matchFound, setMatchFound] = useState<boolean>(false);
-  
+
   // Refs for media elements
   const imageRef = useRef<HTMLImageElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // State for video playback
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [isVideoLoaded, setIsVideoLoaded] = useState<boolean>(false);
-  
+
   // State for detection results
   const [detections, setDetections] = useState<faceapi.WithFaceLandmarks<{
     detection: faceapi.FaceDetection;
@@ -46,11 +46,11 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
 
     const file = files[0];
     setSelectedFile(file);
-    
+
     // Create URL for the file
     const url = URL.createObjectURL(file);
     setFileUrl(url);
-    
+
     // Reset states
     setMatchResults('');
     setMatchFound(false);
@@ -62,75 +62,75 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
   // Process image
   const processImage = async () => {
     if (!imageRef.current || !faceMatcher || !canvasRef.current) return;
-    
+
     setIsProcessing(true);
     setProcessingProgress(10);
-    
+
     try {
       // Prepare canvas
       const img = imageRef.current;
       const canvas = canvasRef.current;
       const displaySize = { width: img.width, height: img.height };
       faceapi.matchDimensions(canvas, displaySize);
-      
+
       setProcessingProgress(30);
-      
+
       // Detect faces
       const detectionOptions = new faceapi.SsdMobilenetv1Options({
         minConfidence: 0.2,
         maxResults: 15
       });
-      
+
       const detections = await faceapi.detectAllFaces(img, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
-      
+
       setProcessingProgress(60);
-      
+
       // Draw canvas
       const resizedDetections = faceapi.resizeResults(detections, displaySize);
       setDetections(resizedDetections);
-      
+
       // Match faces
       let resultsLog = '';
       let foundMatch = false;
-      
+
       if (detections.length === 0) {
         resultsLog = 'No faces detected in the image.';
       } else {
         resultsLog = `Detected ${detections.length} faces in the image.\n\n`;
-        
+
         for (let i = 0; i < detections.length; i++) {
           const detection = detections[i];
           const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-          
+
           resultsLog += `Face #${i + 1}: ${bestMatch.toString()}\n`;
-          
+
           if (bestMatch.label !== 'unknown') {
             foundMatch = true;
             resultsLog += `MATCH FOUND! Confidence: ${((1 - bestMatch.distance) * 100).toFixed(2)}%\n`;
           }
         }
       }
-      
+
       setMatchResults(resultsLog);
       setMatchFound(foundMatch);
-      
+
       // Draw results on canvas
       canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       resizedDetections.forEach((detection, i) => {
         const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
         const isMatch = bestMatch.label !== 'unknown';
         const boxColor = isMatch ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
-        const drawBox = new faceapi.draw.DrawBox(detection.detection.box, { 
+        const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
           boxColor,
           lineWidth: 2,
           label: isMatch ? `Match: ${((1 - bestMatch.distance) * 100).toFixed(0)}%` : 'No Match'
         });
         drawBox.draw(canvas);
       });
-      
+
       setProcessingProgress(100);
     } catch (error) {
       console.error('Error processing image:', error);
@@ -142,86 +142,118 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
 
   // Process video frame
   const processVideoFrame = async () => {
-    if (!videoRef.current || !faceMatcher || !canvasRef.current || !isPlaying) return;
-    
+    if (!videoRef.current || !faceMatcher || !canvasRef.current) return;
+
+    // If video is not playing, don't continue processing
+    if (!isPlaying) return;
+
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+
+      // Make sure video dimensions are available
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        requestAnimationFrame(processVideoFrame);
+        return;
+      }
+
       const displaySize = { width: video.videoWidth, height: video.videoHeight };
       faceapi.matchDimensions(canvas, displaySize);
-      
+
       // Detect faces
       const detectionOptions = new faceapi.SsdMobilenetv1Options({
         minConfidence: 0.2,
         maxResults: 15
       });
-      
+
       const detections = await faceapi.detectAllFaces(video, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
-      
+
       // Draw canvas
       const resizedDetections = faceapi.resizeResults(detections, displaySize);
       setDetections(resizedDetections);
-      
+
       // Match faces
       let foundMatch = false;
       let resultsLog = '';
-      
+
       if (detections.length === 0) {
         resultsLog = 'No faces detected in current frame.';
       } else {
         resultsLog = `Detected ${detections.length} faces in current frame.\n\n`;
-        
+
         for (let i = 0; i < detections.length; i++) {
           const detection = detections[i];
           const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-          
+
           resultsLog += `Face #${i + 1}: ${bestMatch.toString()}\n`;
-          
+
           if (bestMatch.label !== 'unknown') {
             foundMatch = true;
             resultsLog += `MATCH FOUND! Confidence: ${((1 - bestMatch.distance) * 100).toFixed(2)}%\n`;
           }
         }
       }
-      
+
       setMatchResults(resultsLog);
       setMatchFound(foundMatch);
-      
+
       // Draw results on canvas
-      canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-      
-      resizedDetections.forEach((detection, i) => {
-        const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-        const isMatch = bestMatch.label !== 'unknown';
-        const boxColor = isMatch ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
-        const drawBox = new faceapi.draw.DrawBox(detection.detection.box, { 
-          boxColor,
-          lineWidth: 2,
-          label: isMatch ? `Match: ${((1 - bestMatch.distance) * 100).toFixed(0)}%` : 'No Match'
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw face detections
+        resizedDetections.forEach((detection, i) => {
+          const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+          const isMatch = bestMatch.label !== 'unknown';
+          const boxColor = isMatch ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
+          const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
+            boxColor,
+            lineWidth: 2,
+            label: isMatch ? `Match: ${((1 - bestMatch.distance) * 100).toFixed(0)}%` : 'No Match'
+          });
+          drawBox.draw(canvas);
+
+          // Draw face landmarks for better visualization
+          if (detection.landmarks) {
+            const drawLandmarks = new faceapi.draw.DrawFaceLandmarks(detection.landmarks, {
+              lineWidth: 2,
+              drawLines: true,
+              color: isMatch ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)'
+            });
+            drawLandmarks.draw(canvas);
+          }
         });
-        drawBox.draw(canvas);
-      });
-      
-      // Continue processing frames if video is playing
-      if (isPlaying) {
-        requestAnimationFrame(processVideoFrame);
       }
     } catch (error) {
       console.error('Error processing video frame:', error);
+    }
+
+    // Continue processing frames if video is still playing
+    if (isPlaying) {
+      requestAnimationFrame(processVideoFrame);
     }
   };
 
   // Handle video playback
   const handleVideoPlay = () => {
     setIsPlaying(true);
-    processVideoFrame();
+    // Start processing video frames
+    requestAnimationFrame(processVideoFrame);
   };
 
   const handleVideoPause = () => {
     setIsPlaying(false);
   };
+
+  // Start processing when video is loaded
+  useEffect(() => {
+    if (isVideoLoaded && videoRef.current && isPlaying) {
+      requestAnimationFrame(processVideoFrame);
+    }
+  }, [isVideoLoaded, isPlaying]);
 
   const handleVideoTimeUpdate = () => {
     if (videoRef.current) {
@@ -411,6 +443,8 @@ const LocalMedia: React.FC<LocalMediaProps> = ({ faceMatcher, onClose, matchThre
                   onTimeUpdate={handleVideoTimeUpdate}
                   onLoadedMetadata={handleVideoLoaded}
                   controls
+                  playsInline
+                  crossOrigin="anonymous"
                 ></video>
                 <canvas ref={canvasRef} className="detection-canvas"></canvas>
 
