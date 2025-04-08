@@ -139,6 +139,30 @@ const GuardianVision: React.FC = () => {
   const [isDebugPanelExpanded, setIsDebugPanelExpanded] = useState<boolean>(false); // Collapsed by default
   const [isMetricsPanelExpanded, setIsMetricsPanelExpanded] = useState<boolean>(false); // Collapsed by default
 
+  // State for connection settings
+  const [showCctvSettings, setShowCctvSettings] = useState<boolean>(false);
+  const [showDroneSettings, setShowDroneSettings] = useState<boolean>(false);
+  const [cctvConnected, setCctvConnected] = useState<boolean>(false);
+  const [droneConnected, setDroneConnected] = useState<boolean>(false);
+
+  // CCTV connection settings
+  const [cctvSettings, setCctvSettings] = useState({
+    ipAddress: '192.168.1.100',
+    port: '8080',
+    username: 'admin',
+    password: '',
+    protocol: 'rtsp'
+  });
+
+  // Drone connection settings
+  const [droneSettings, setDroneSettings] = useState({
+    droneId: 'DJI-1234',
+    connectionType: 'wifi',
+    ssid: 'Drone-Network',
+    password: '',
+    channel: '5'
+  });
+
   // Create refs to store the last dimensions and counts for logging optimization
   const lastWidthRef = useRef<number>(0);
   const lastHeightRef = useRef<number>(0);
@@ -1349,6 +1373,14 @@ const GuardianVision: React.FC = () => {
     if (optionId === 'webcam') {
       setShowCamera(true);
       setSelectedSource(null);
+    } else if (optionId === 'cctv') {
+      // Show CCTV connection settings
+      setShowCctvSettings(true);
+      setSelectedSource(null);
+    } else if (optionId === 'drones') {
+      // Show drone connection settings
+      setShowDroneSettings(true);
+      setSelectedSource(null);
     } else {
       // Always set the selected source to the option clicked
       // This ensures the upload UI stays visible when clicking on it again
@@ -1582,6 +1614,68 @@ const GuardianVision: React.FC = () => {
 
   const clearMatchHistory = () => {
     setMatchHistory([]);
+  };
+
+  // Handle CCTV settings change
+  const handleCctvSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setCctvSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle Drone settings change
+  const handleDroneSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setDroneSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Connect to CCTV
+  const connectToCctv = () => {
+    // Simulate connection process
+    setIsProcessing(true);
+    setTimeout(() => {
+      // Randomly decide if a device is available (for demo purposes)
+      const deviceAvailable = Math.random() > 0.5;
+
+      if (deviceAvailable) {
+        setCctvConnected(true);
+        setShowCctvSettings(false);
+        // Show success message
+        alert('Successfully connected to CCTV camera');
+      } else {
+        // Show no device available message
+        alert('No CCTV device available at the specified address. Please check your connection settings and try again.');
+      }
+
+      setIsProcessing(false);
+    }, 2000);
+  };
+
+  // Connect to Drone
+  const connectToDrone = () => {
+    // Simulate connection process
+    setIsProcessing(true);
+    setTimeout(() => {
+      // Randomly decide if a device is available (for demo purposes)
+      const deviceAvailable = Math.random() > 0.5;
+
+      if (deviceAvailable) {
+        setDroneConnected(true);
+        setShowDroneSettings(false);
+        // Show success message
+        alert('Successfully connected to drone');
+      } else {
+        // Show no device available message
+        alert('No drone available with the specified ID. Please check your connection settings and try again.');
+      }
+
+      setIsProcessing(false);
+    }, 2000);
   };
 
   const Tutorial: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -2044,7 +2138,7 @@ const GuardianVision: React.FC = () => {
               {sinkOptions.map((option) => (
                 <motion.button
                   key={option.id}
-                  className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''}`}
+                  className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''} ${(option.id === 'cctv' && cctvConnected) || (option.id === 'drones' && droneConnected) ? 'connected' : ''}`}
                   onClick={() => {
                     // If this option is already selected, deselect it
                     if (selectedSinks.includes(option.id)) {
@@ -2053,6 +2147,23 @@ const GuardianVision: React.FC = () => {
                       // Otherwise, clear all selections and select only this one
                       // Also clear any testing options
                       setSelectedSinks([option.id]);
+
+                      // Show appropriate settings modal
+                      if (option.id === 'cctv') {
+                        if (cctvConnected) {
+                          // If already connected, show status
+                          alert('CCTV Camera already connected. Status: Active');
+                        } else {
+                          setShowCctvSettings(true);
+                        }
+                      } else if (option.id === 'drones') {
+                        if (droneConnected) {
+                          // If already connected, show status
+                          alert('Drone already connected. Status: Active');
+                        } else {
+                          setShowDroneSettings(true);
+                        }
+                      }
                     }
                   }}
                   whileHover={{ scale: 1.05 }}
@@ -2168,6 +2279,192 @@ const GuardianVision: React.FC = () => {
       {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
       {showDashboard && <Dashboard onClose={() => setShowDashboard(false)} />}
+
+      {/* CCTV Settings Modal */}
+      {showCctvSettings && (
+        <div className="connection-modal-overlay">
+          <div className="connection-modal">
+            <h2>CCTV Camera Connection</h2>
+            <div className="connection-form">
+              <div className="form-group">
+                <label htmlFor="protocol">Protocol</label>
+                <select
+                  id="protocol"
+                  name="protocol"
+                  value={cctvSettings.protocol}
+                  onChange={handleCctvSettingsChange}
+                >
+                  <option value="rtsp">RTSP</option>
+                  <option value="http">HTTP</option>
+                  <option value="https">HTTPS</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ipAddress">IP Address</label>
+                <input
+                  type="text"
+                  id="ipAddress"
+                  name="ipAddress"
+                  value={cctvSettings.ipAddress}
+                  onChange={handleCctvSettingsChange}
+                  placeholder="192.168.1.100"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="port">Port</label>
+                <input
+                  type="text"
+                  id="port"
+                  name="port"
+                  value={cctvSettings.port}
+                  onChange={handleCctvSettingsChange}
+                  placeholder="8080"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={cctvSettings.username}
+                  onChange={handleCctvSettingsChange}
+                  placeholder="admin"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={cctvSettings.password}
+                  onChange={handleCctvSettingsChange}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="connection-buttons">
+                <button
+                  className="cancel-button"
+                  onClick={() => {
+                    setShowCctvSettings(false);
+                    setSelectedSinks([]);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="connect-button"
+                  onClick={connectToCctv}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Connecting...' : 'Connect'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drone Settings Modal */}
+      {showDroneSettings && (
+        <div className="connection-modal-overlay">
+          <div className="connection-modal">
+            <h2>Drone Connection</h2>
+            <div className="connection-form">
+              <div className="form-group">
+                <label htmlFor="connectionType">Connection Type</label>
+                <select
+                  id="connectionType"
+                  name="connectionType"
+                  value={droneSettings.connectionType}
+                  onChange={handleDroneSettingsChange}
+                >
+                  <option value="wifi">Wi-Fi</option>
+                  <option value="bluetooth">Bluetooth</option>
+                  <option value="radio">Radio Control</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="droneId">Drone ID</label>
+                <input
+                  type="text"
+                  id="droneId"
+                  name="droneId"
+                  value={droneSettings.droneId}
+                  onChange={handleDroneSettingsChange}
+                  placeholder="DJI-1234"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ssid">Network SSID</label>
+                <input
+                  type="text"
+                  id="ssid"
+                  name="ssid"
+                  value={droneSettings.ssid}
+                  onChange={handleDroneSettingsChange}
+                  placeholder="Drone-Network"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={droneSettings.password}
+                  onChange={handleDroneSettingsChange}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="channel">Channel</label>
+                <select
+                  id="channel"
+                  name="channel"
+                  value={droneSettings.channel}
+                  onChange={handleDroneSettingsChange}
+                >
+                  <option value="1">Channel 1</option>
+                  <option value="2">Channel 2</option>
+                  <option value="3">Channel 3</option>
+                  <option value="4">Channel 4</option>
+                  <option value="5">Channel 5</option>
+                </select>
+              </div>
+
+              <div className="connection-buttons">
+                <button
+                  className="cancel-button"
+                  onClick={() => {
+                    setShowDroneSettings(false);
+                    setSelectedSinks([]);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="connect-button"
+                  onClick={connectToDrone}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Connecting...' : 'Connect'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
