@@ -11,13 +11,15 @@ interface ModelInfo {
 /**
  * Custom hook to load face-api.js models with IndexedDB caching
  * @param modelUrl Base URL for the model files
+ * @param offlineMode Whether to prioritize offline storage and avoid network requests
  * @returns Object containing loading state and error information
  */
-export const useFaceApiModels = (modelUrl: string) => {
+export const useFaceApiModels = (modelUrl: string, offlineMode: boolean = false) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
 
+  // Re-run the effect when offlineMode changes
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -71,8 +73,8 @@ export const useFaceApiModels = (modelUrl: string) => {
                 // In practice, we'd need to load the model weights from the ArrayBuffer
                 await model.net.loadFromUri(modelUrl);
                 console.log(`${model.name} loaded from IndexedDB`);
-              } else {
-                // Fallback to loading from URL
+              } else if (!offlineMode) {
+                // Fallback to loading from URL only if not in offline mode
                 await model.net.loadFromUri(modelUrl);
                 console.log(`${model.name} loaded from URL (IndexedDB retrieval failed)`);
 
@@ -80,15 +82,22 @@ export const useFaceApiModels = (modelUrl: string) => {
                 // Note: This is a simplified example - actual implementation would need to serialize the model
                 // In practice, we'd need to get the model weights as ArrayBuffer
                 // await saveModelToIndexedDB(model.name, modelWeightsAsArrayBuffer);
+              } else {
+                // In offline mode, throw an error if model isn't in IndexedDB
+                throw new Error(`Model ${model.name} not found in offline storage`);
               }
             } catch (err) {
+              if (offlineMode) {
+                // In offline mode, propagate the error
+                throw err;
+              }
               console.error(`Error loading ${model.name} from IndexedDB:`, err);
               // Fallback to loading from URL
               await model.net.loadFromUri(modelUrl);
               console.log(`${model.name} loaded from URL (after IndexedDB error)`);
             }
-          } else {
-            // Load from URL
+          } else if (!offlineMode) {
+            // Load from URL only if not in offline mode
             console.log(`Loading ${model.name} from URL`);
             await model.net.loadFromUri(modelUrl);
             console.log(`${model.name} loaded from URL`);
@@ -97,6 +106,9 @@ export const useFaceApiModels = (modelUrl: string) => {
             // Note: This is a simplified example - actual implementation would need to serialize the model
             // In practice, we'd need to get the model weights as ArrayBuffer
             // await saveModelToIndexedDB(model.name, modelWeightsAsArrayBuffer);
+          } else {
+            // In offline mode, throw an error if model isn't in IndexedDB
+            throw new Error(`Model ${model.name} not available in offline mode`);
           }
         }
 
@@ -111,7 +123,7 @@ export const useFaceApiModels = (modelUrl: string) => {
     };
 
     loadModels();
-  }, [modelUrl]);
+  }, [modelUrl, offlineMode]); // Re-run when offlineMode changes
 
   return { isLoading, error, modelsLoaded };
 };

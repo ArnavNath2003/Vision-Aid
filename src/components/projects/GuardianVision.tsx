@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Upload,
   Camera,
-  Plane,
   X
 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
@@ -14,6 +13,16 @@ import { useFaceApiModels } from '../../hooks/useFaceApiModels';
 import LocalMedia from './LocalMedia';
 // Import Dashboard component
 import DashboardComponent from './Dashboard';
+// Import Settings component
+import Settings from './Settings';
+// Import LocationIndicator component
+import LocationIndicator from './LocationIndicator';
+// Import Toast component
+import Toast from '../Toast';
+// Import custom icons
+import cctvIcon from '../../assets/icons/cctv.svg';
+import droneIcon from '../../assets/icons/drone.svg';
+import webcamIcon from '../../assets/icons/webcam.svg';
 
 export interface FaceMatch {
   label: string;
@@ -74,6 +83,12 @@ const GuardianVision: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
   const [matchThresholdSlider, setMatchThresholdSlider] = useState(60);
   const [showDashboard, setShowDashboard] = useState(false);
+  // State for toast notifications
+  const [toasts, setToasts] = useState<Array<{id: number, message: string, type: 'success' | 'error' | 'info' | 'warning'}>>([]);
+  const [isToastActive, setIsToastActive] = useState<boolean>(false);
+  // State to track geolocation status
+  const [geoStatus, setGeoStatus] = useState<'inactive' | 'active' | 'error'>('inactive');
+  const [locationUpdateTime, setLocationUpdateTime] = useState<string>('');
   // We'll use the existing referenceImagesCount state
 
   // All refs
@@ -84,7 +99,8 @@ const GuardianVision: React.FC = () => {
 
   // Import the custom hook for model loading
   const MODEL_URL = `${window.location.origin}/weights`;
-  const { error: modelsError, modelsLoaded: faceApiModelsLoaded } = useFaceApiModels(MODEL_URL);
+  // The useFaceApiModels hook uses IndexedDB for caching models when offlineMode is enabled
+  const { error: modelsError, modelsLoaded: faceApiModelsLoaded } = useFaceApiModels(MODEL_URL, offlineMode);
 
   // Update state based on the hook results
   useEffect(() => {
@@ -112,20 +128,65 @@ const GuardianVision: React.FC = () => {
     setMatchThreshold(1 - (matchThresholdSlider / 100) + 0.15);
   }, [matchThresholdSlider]);
 
+  // Effect to handle geolocation tracking based on the geolocationEnabled setting
   useEffect(() => {
+    let watchId: number | null = null;
+
     if (geolocationEnabled) {
       if (navigator.geolocation) {
+        setGeoStatus('active');
+
+        // Get initial position
         navigator.geolocation.getCurrentPosition(
           (position) => {
             setCurrentLocation(position);
+            const now = new Date();
+            setLocationUpdateTime(now.toLocaleTimeString());
+            console.log('Geolocation enabled, initial position acquired');
           },
           (error) => {
             console.error('Geolocation error:', error);
+            setGeoStatus('error');
           }
         );
+
+        // Set up continuous tracking
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            setCurrentLocation(position);
+            const now = new Date();
+            setLocationUpdateTime(now.toLocaleTimeString());
+          },
+          (error) => {
+            console.error('Geolocation tracking error:', error);
+            setGeoStatus('error');
+          },
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
+        );
+
+        console.log('Geolocation tracking started');
+      } else {
+        console.warn('Geolocation is not supported by this browser');
+        setGeoStatus('error');
+      }
+    } else {
+      setGeoStatus('inactive');
+      if (currentLocation) {
+        // Clear location data when disabled
+        setCurrentLocation(null);
+        setLocationUpdateTime('');
+        console.log('Geolocation disabled, location data cleared');
       }
     }
-  }, [geolocationEnabled]);
+
+    // Cleanup function to stop tracking when component unmounts or setting changes
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        console.log('Geolocation tracking stopped');
+      }
+    };
+  }, [geolocationEnabled, currentLocation]);
 
   const videoStyle = {
     width: '100%',
@@ -434,7 +495,7 @@ const GuardianVision: React.FC = () => {
         // Draw box around face with match information
         const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
           label: isMatch
-            ? `Match: ${confidence.toFixed(2)}%`
+            ? showConfidence ? `Match: ${confidence.toFixed(2)}%` : 'Match'
             : 'No Match',
           boxColor: isMatch ? '#00ff00' : '#ff0000',
           lineWidth: 2
@@ -586,6 +647,50 @@ const GuardianVision: React.FC = () => {
     });
   };
 
+  // Helper function to apply a blur effect to an image region
+  // This is a simple box blur implementation for privacy mode
+  const applyBlurEffect = (imageData: ImageData, radius: number, width: number, height: number): ImageData => {
+    // Create a copy of the image data to work with
+    const pixels = new Uint8ClampedArray(imageData.data);
+    const output = new Uint8ClampedArray(imageData.data.length);
+
+    // Simple box blur algorithm
+    // We're using a dynamic count for each pixel instead of a fixed divisor
+
+    // For each pixel in the image
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let r = 0, g = 0, b = 0, a = 0;
+        let count = 0;
+
+        // Sample the surrounding pixels
+        for (let ky = -radius; ky <= radius; ky++) {
+          for (let kx = -radius; kx <= radius; kx++) {
+            const px = Math.min(width - 1, Math.max(0, x + kx));
+            const py = Math.min(height - 1, Math.max(0, y + ky));
+            const i = (py * width + px) * 4;
+
+            r += pixels[i];
+            g += pixels[i + 1];
+            b += pixels[i + 2];
+            a += pixels[i + 3];
+            count++;
+          }
+        }
+
+        // Calculate the average color
+        const i = (y * width + x) * 4;
+        output[i] = r / count;
+        output[i + 1] = g / count;
+        output[i + 2] = b / count;
+        output[i + 3] = a / count;
+      }
+    }
+
+    // Create a new ImageData object with the blurred data
+    return new ImageData(output, width, height);
+  };
+
   // Function to render detections without running face detection again
   const renderDetections = (video: HTMLVideoElement, canvas: HTMLCanvasElement, detections: any[]) => {
     try {
@@ -617,9 +722,30 @@ const GuardianVision: React.FC = () => {
         // Log the box we're about to draw
         console.log('Drawing box:', detection.detection.box);
 
+        // Apply privacy mode - blur non-matching faces if enabled
+        if (privacyMode && !isMatch) {
+          try {
+            // Get the face region
+            const box = detection.detection.box;
+            const faceRegion = ctx.getImageData(box.x, box.y, box.width, box.height);
+
+            // Apply a blur effect to the face region
+            // This is a simple blur implementation - in a production app, you'd use a more sophisticated algorithm
+            const blurRadius = 10;
+            const blurredFace = applyBlurEffect(faceRegion, blurRadius, box.width, box.height);
+
+            // Put the blurred face back on the canvas
+            ctx.putImageData(blurredFace, box.x, box.y);
+
+            console.log('Applied blur to non-matching face (privacy mode)');
+          } catch (error) {
+            console.error('Error applying privacy blur:', error);
+          }
+        }
+
         const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
           label: isMatch
-            ? `Match: ${confidence.toFixed(2)}%`
+            ? showConfidence ? `Match: ${confidence.toFixed(2)}%` : 'Match'
             : 'No Match',
           boxColor: isMatch ? '#00ff00' : '#ff0000',
           lineWidth: 2
@@ -697,7 +823,10 @@ const GuardianVision: React.FC = () => {
             ctx.fillStyle = color;
             ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
             ctx.shadowBlur = 5;
-            ctx.fillText(isMatch ? 'MATCH' : 'NO MATCH', labelX, labelY);
+            ctx.fillText(isMatch
+              ? (showConfidence ? `MATCH ${confidence.toFixed(0)}%` : 'MATCH')
+              : 'NO MATCH',
+              labelX, labelY);
             ctx.shadowBlur = 0;
           } else {
             console.warn('No key points selected for landmarks');
@@ -854,16 +983,28 @@ const GuardianVision: React.FC = () => {
     try {
       console.log(`Processing reference image ${index + 1}`);
 
-      // Use SSD MobileNet with very permissive parameters to detect more challenging faces
-      const ssdOptions = new faceapi.SsdMobilenetv1Options({
-        // Use a very low confidence threshold to detect more faces
-        minConfidence: 0.2,
-        // Increase the number of results to consider more potential faces
-        maxResults: 15
-      });
+      // Determine which face detection model to use based on performanceMode setting
+      let detectionOptions;
 
-      console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
-      const detections = await faceapi.detectAllFaces(img, ssdOptions)
+      if (performanceMode) {
+        // Use TinyYolov2 in performance mode
+        detectionOptions = new faceapi.TinyYolov2Options({
+          scoreThreshold: 0.5,
+          inputSize: 224
+        });
+        console.log(`Using TinyYolov2 (performance mode) for face detection on image ${index + 1}`);
+      } else {
+        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
+        detectionOptions = new faceapi.SsdMobilenetv1Options({
+          // Use a very low confidence threshold to detect more faces
+          minConfidence: 0.2,
+          // Increase the number of results to consider more potential faces
+          maxResults: 15
+        });
+        console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
+      }
+
+      const detections = await faceapi.detectAllFaces(img, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
 
@@ -956,6 +1097,15 @@ const GuardianVision: React.FC = () => {
         return;
       }
       lastFrameTime = timestamp;
+
+      // Apply frameSkip setting - only process every Nth frame
+      // frameCount is incremented each time this function is called
+      frameCount++;
+      if (frameCount % frameSkip !== 0) {
+        // Skip this frame based on frameSkip setting
+        requestAnimationFrame(processFrame);
+        return;
+      }
 
       // Check if processing should continue
       if (!processingActive.current) {
@@ -1246,16 +1396,18 @@ const GuardianVision: React.FC = () => {
 
               {face.match && (
                 <>
+                  {showConfidence && (
+                    <div className="metric-row">
+                      <span className="metric-label">Match Confidence:</span>
+                      <span className="metric-value confidence-value">
+                        {((1 - face.match.distance) * 100).toFixed(2)}%
+                      </span>
+                    </div>
+                  )}
                   <div className="metric-row">
-                    <span className="metric-label">Match Confidence:</span>
-                    <span className="metric-value confidence-value">
-                      {((1 - face.match.distance) * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="metric-row">
-                    <span className="metric-label">Distance Score:</span>
+                    <span className="metric-label">{showConfidence ? 'Distance Score' : 'Match Status'}:</span>
                     <span className="metric-value">
-                      {face.match.distance.toFixed(4)}
+                      {showConfidence ? face.match.distance.toFixed(4) : 'Positive Match'}
                     </span>
                   </div>
                 </>
@@ -1281,14 +1433,14 @@ const GuardianVision: React.FC = () => {
 
   // Real-world search sources
   const sinkOptions = [
-    { id: 'cctv', label: 'CCTV Cameras', icon: <Camera /> },
-    { id: 'drones', label: 'Drones', icon: <Plane /> },
+    { id: 'cctv', label: 'CCTV Cameras', icon: <img src={cctvIcon} alt="CCTV" className="custom-icon" /> },
+    { id: 'drones', label: 'Drones', icon: <img src={droneIcon} alt="Drone" className="custom-icon" /> },
     { id: 'local', label: 'Local Media', icon: <Upload /> },
   ];
 
   // Testing options
   const testingOptions = [
-    { id: 'webcam', label: 'Live Webcam', icon: <Camera /> },
+    { id: 'webcam', label: 'Live Webcam', icon: <img src={webcamIcon} alt="Webcam" className="custom-icon" /> },
   ];
 
   // This function is used to process video files for face detection
@@ -1314,15 +1466,28 @@ const GuardianVision: React.FC = () => {
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Use SSD MobileNet with very permissive parameters to detect more challenging faces
-      const ssdOptions = new faceapi.SsdMobilenetv1Options({
-        // Use a very low confidence threshold to detect more faces
-        minConfidence: 0.2,
-        // Increase the number of results to consider more potential faces
-        maxResults: 15
-      });
+      // Determine which face detection model to use based on performanceMode setting
+      let detectionOptions;
 
-      const detections = await faceapi.detectAllFaces(canvas, ssdOptions)
+      if (performanceMode) {
+        // Use TinyYolov2 in performance mode
+        detectionOptions = new faceapi.TinyYolov2Options({
+          scoreThreshold: 0.5,
+          inputSize: 224
+        });
+        console.log('Using TinyYolov2 (performance mode) for local media processing');
+      } else {
+        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
+        detectionOptions = new faceapi.SsdMobilenetv1Options({
+          // Use a very low confidence threshold to detect more faces
+          minConfidence: 0.2,
+          // Increase the number of results to consider more potential faces
+          maxResults: 15
+        });
+        console.log('Using optimized SSD MobileNet for local media processing');
+      }
+
+      const detections = await faceapi.detectAllFaces(canvas, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
 
@@ -1339,8 +1504,35 @@ const GuardianVision: React.FC = () => {
 
       resizedDetections.forEach(detection => {
         const match = faceMatcher.findBestMatch(detection.descriptor);
+        const isMatch = match.distance < matchThreshold;
+        const confidence = (1 - match.distance) * 100;
+
+        // Apply privacy mode - blur non-matching faces if enabled
+        if (privacyMode && !isMatch) {
+          try {
+            // Get the face region
+            const box = detection.detection.box;
+            const faceRegion = ctx.getImageData(box.x, box.y, box.width, box.height);
+
+            // Apply a blur effect to the face region
+            const blurRadius = 10;
+            const blurredFace = applyBlurEffect(faceRegion, blurRadius, box.width, box.height);
+
+            // Put the blurred face back on the canvas
+            ctx.putImageData(blurredFace, box.x, box.y);
+
+            console.log('Applied blur to non-matching face in local media (privacy mode)');
+          } catch (error) {
+            console.error('Error applying privacy blur in local media:', error);
+          }
+        }
+
         const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
-          label: `Match: ${(1 - match.distance) * 100}%`
+          label: isMatch
+            ? showConfidence ? `Match: ${confidence.toFixed(2)}%` : 'Match'
+            : 'No Match',
+          boxColor: isMatch ? '#00ff00' : '#ff0000',
+          lineWidth: 2
         });
         drawBox.draw(canvas);
       });
@@ -1758,6 +1950,31 @@ const GuardianVision: React.FC = () => {
 
   // Old Dashboard component removed
 
+  // Function to add a toast notification
+  const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    // Prevent spam by checking if a toast is already active
+    if (isToastActive) return;
+
+    setIsToastActive(true);
+
+    const newToast = {
+      id: Date.now(),
+      message,
+      type
+    };
+    setToasts(prevToasts => [...prevToasts, newToast]);
+
+    // Allow new toasts after 3 seconds
+    setTimeout(() => {
+      setIsToastActive(false);
+    }, 3000);
+
+    // Remove toast after 4 seconds
+    setTimeout(() => {
+      setToasts(prevToasts => prevToasts.filter(toast => toast.id !== newToast.id));
+    }, 4000);
+  };
+
   const handleMatch = (match: FaceMatch) => {
     // Determine if this is a successful match based on the distance
     const isFound = match.distance < 0.6; // Threshold for considering a match as "found"
@@ -1779,6 +1996,13 @@ const GuardianVision: React.FC = () => {
       source: source,
       timestamp: new Date() // Ensure we have a timestamp
     };
+
+    // Show toast notification for match with location if geolocation is enabled
+    if (isFound && geolocationEnabled && match.location) {
+      const lat = match.location.coords.latitude.toFixed(6);
+      const lng = match.location.coords.longitude.toFixed(6);
+      addToast(`Match found at location: ${lat}, ${lng}`, 'success');
+    }
 
     // Update match history
     console.log('Adding match to history:', enhancedMatch);
@@ -1802,6 +2026,18 @@ const GuardianVision: React.FC = () => {
 
   return (
     <div className={`guardian-vision-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToasts(prevToasts => prevToasts.filter(t => t.id !== toast.id))}
+          />
+        ))}
+      </div>
+
       <div className="guardian-header">
         <Link to="/projects" className="back-button">
           <ArrowLeft />
@@ -1853,111 +2089,25 @@ const GuardianVision: React.FC = () => {
           <span className="feature-badge">Optimized for improved side-profile detection</span>
         </p>
 
-        <div className="settings-panel">
-          <h3>Settings</h3>
-          <div className="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                checked={showConfidence}
-                onChange={() => setShowConfidence(!showConfidence)}
-              />
-              Show Confidence Scores
-            </label>
-          </div>
-          <div className="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                checked={privacyMode}
-                onChange={() => setPrivacyMode(!privacyMode)}
-              />
-              Privacy Mode (Blur Non-Matches)
-            </label>
-          </div>
-          <div className="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                checked={geolocationEnabled}
-                onChange={() => setGeolocationEnabled(!geolocationEnabled)}
-              />
-              Enable Location Tracking
-            </label>
-          </div>
-          <div className="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                checked={offlineMode}
-                onChange={() => setOfflineMode(!offlineMode)}
-              />
-              Offline Mode
-            </label>
-          </div>
-
-          <div className="dashboard-button-container">
-            <button
-              className="dashboard-open-button"
-              onClick={() => setShowDashboard(true)}
-            >
-              Open Dashboard
-            </button>
-          </div>
-
-          <div className="advanced-settings">
-            <button
-              className="advanced-settings-toggle"
-              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-            >
-              {showAdvancedSettings ? 'Hide Advanced Settings' : 'Show Advanced Settings'}
-            </button>
-
-            {showAdvancedSettings && (
-              <div className="advanced-settings-content">
-                <div className="setting-item">
-                  <label>Match Sensitivity: {matchThresholdSlider}%</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={matchThresholdSlider}
-                    onChange={(e) => setMatchThresholdSlider(parseInt(e.target.value))}
-                  />
-                  <span className="setting-description">
-                    Higher values mean stricter matching (fewer false positives)
-                  </span>
-                </div>
-                <div className="setting-item">
-                  <label>Frame Skip: {frameSkip}</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={frameSkip}
-                    onChange={(e) => setFrameSkip(parseInt(e.target.value))}
-                  />
-                  <span className="setting-description">
-                    Process every Nth frame (higher values improve performance)
-                  </span>
-                </div>
-                <div className="setting-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={performanceMode}
-                      onChange={() => setPerformanceMode(!performanceMode)}
-                    />
-                    Performance Mode
-                  </label>
-                  <span className="setting-description">
-                    Optimize for speed over accuracy
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <Settings
+          showConfidence={showConfidence}
+          setShowConfidence={setShowConfidence}
+          privacyMode={privacyMode}
+          setPrivacyMode={setPrivacyMode}
+          geolocationEnabled={geolocationEnabled}
+          setGeolocationEnabled={setGeolocationEnabled}
+          offlineMode={offlineMode}
+          setOfflineMode={setOfflineMode}
+          showAdvancedSettings={showAdvancedSettings}
+          setShowAdvancedSettings={setShowAdvancedSettings}
+          matchThresholdSlider={matchThresholdSlider}
+          setMatchThresholdSlider={setMatchThresholdSlider}
+          frameSkip={frameSkip}
+          setFrameSkip={setFrameSkip}
+          performanceMode={performanceMode}
+          setPerformanceMode={setPerformanceMode}
+          onOpenDashboard={() => setShowDashboard(true)}
+        />
 
         <div className="action-buttons">
           <button
@@ -2273,11 +2423,15 @@ const GuardianVision: React.FC = () => {
         {processedFaces.length > 0 && (
           <div className={`face-match-label ${processedFaces[processedFaces.length - 1].match ? 'match' : 'no-match'}`}>
             {processedFaces[processedFaces.length - 1].match ? (
-              <>Match Found: {
-                isNaN(((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100))
-                  ? '0.00'
-                  : ((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100).toFixed(2)
-              }%</>
+              showConfidence ? (
+                <>Match Found: {
+                  isNaN(((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100))
+                    ? '0.00'
+                    : ((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100).toFixed(2)
+                }%</>
+              ) : (
+                <>Match Found</>
+              )
             ) : (
               <>No Match Found</>
             )}
@@ -2336,6 +2490,14 @@ const GuardianVision: React.FC = () => {
           handleMatch={handleMatch}
         />
       )}
+
+      {/* Location Indicator */}
+      <LocationIndicator
+        geoStatus={geoStatus}
+        currentLocation={currentLocation}
+        locationUpdateTime={locationUpdateTime}
+        matchFound={processedFaces.length > 0 && processedFaces[processedFaces.length - 1].match !== null}
+      />
 
       {/* CCTV Settings Modal */}
       {showCctvSettings && (
