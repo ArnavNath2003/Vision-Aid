@@ -1916,7 +1916,7 @@
 
 .tutorial-content h2 {
   font-size: 2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   font-weight: 700;
   background: linear-gradient(135deg,
     rgba(70, 130, 180, 1),
@@ -1927,6 +1927,16 @@
   -webkit-text-fill-color: transparent;
   display: inline-block;
   letter-spacing: 0.5px;
+}
+
+.tutorial-intro {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1.5rem;
+  border-left: 3px solid rgba(147, 112, 219, 0.7);
+  padding-left: 15px;
+  font-weight: 500;
 }
 
 .tutorial-steps {
@@ -1969,6 +1979,29 @@
 .tutorial-step p {
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 10px;
+}
+
+.tutorial-step ul {
+  list-style-type: none;
+  padding-left: 10px;
+  margin-bottom: 10px;
+}
+
+.tutorial-step li {
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.tutorial-step li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: rgba(147, 112, 219, 0.9);
+  font-size: 1.2rem;
 }
 
 .tutorial-close {

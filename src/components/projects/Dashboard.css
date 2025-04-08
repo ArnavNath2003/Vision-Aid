@@ -286,6 +286,41 @@
   margin-bottom: 1rem;
 }
 
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.refresh-button {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.7), rgba(3, 169, 244, 0.7));
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refresh-button:hover {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(3, 169, 244, 0.9));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.refresh-button:hover svg {
+  transform: rotate(180deg);
+}
+
+.refresh-button svg {
+  transition: transform 0.5s ease;
+}
+
 .clear-history-button {
   background: linear-gradient(135deg, rgba(244, 67, 54, 0.7), rgba(233, 30, 99, 0.7));
   color: white;
@@ -297,6 +332,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .clear-history-button:hover {
@@ -305,12 +343,24 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+.clear-history-button:hover svg {
+  transform: translateY(-2px) rotate(10deg);
+}
+
+.clear-history-button svg {
+  transition: transform 0.3s ease;
+}
+
 .clear-history-button:disabled {
   background: rgba(150, 150, 150, 0.3);
   color: rgba(255, 255, 255, 0.5);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.clear-history-button:disabled svg {
+  opacity: 0.5;
 }
 
 .search-input {
@@ -435,9 +485,28 @@
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  height: 300px;
+  min-height: 350px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+}
+
+.chart-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.no-data-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  padding: 2rem;
 }
 
 .chart {
@@ -465,6 +534,44 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
+  position: relative;
+  padding: 0 5px;
+}
+
+.chart-column:hover .chart-bars {
+  transform: translateY(-5px);
+}
+
+.chart-column:hover .chart-bar.searches::after {
+  content: attr(data-count) ' searches';
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(70, 130, 180, 0.9);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.chart-column:hover .chart-bar.found::after {
+  content: attr(data-count) ' found';
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(147, 112, 219, 0.9);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .chart-bars {
@@ -473,22 +580,34 @@
   height: 100%;
   width: 100%;
   justify-content: center;
-  gap: 2px;
+  gap: 8px;
+  transition: transform 0.3s ease;
+  position: relative;
 }
 
 .chart-bar {
   width: 20px;
   border-radius: 4px 4px 0 0;
   transition: all 0.3s ease;
-  min-height: 2px; /* Ensure bars are visible even with small values */
+  min-height: 4px; /* Ensure bars are visible even with small values */
+  position: relative;
+  transform-origin: bottom;
+  animation: growUp 1s ease-out;
+}
+
+@keyframes growUp {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
 }
 
 .chart-bar.searches {
-  background: linear-gradient(to top, rgba(70, 130, 180, 0.7), rgba(70, 130, 180, 0.3));
+  background: linear-gradient(to top, rgba(70, 130, 180, 0.9), rgba(70, 130, 180, 0.5));
+  box-shadow: 0 0 10px rgba(70, 130, 180, 0.5);
 }
 
 .chart-bar.found {
-  background: linear-gradient(to top, rgba(147, 112, 219, 0.7), rgba(147, 112, 219, 0.3));
+  background: linear-gradient(to top, rgba(147, 112, 219, 0.9), rgba(147, 112, 219, 0.5));
+  box-shadow: 0 0 10px rgba(147, 112, 219, 0.5);
 }
 
 .chart-label {

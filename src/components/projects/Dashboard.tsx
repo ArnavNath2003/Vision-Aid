@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, BarChart2, Users, Clock, Search, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, BarChart2, Users, Clock, Search, AlertTriangle, CheckCircle, RefreshCw, Trash2 } from 'lucide-react';
 import './Dashboard.css';
 import { FaceMatch, ProcessedFace } from './GuardianVision';
+import Toast from '../Toast';
 
 interface DashboardProps {
   onClose: () => void;
@@ -29,10 +30,64 @@ interface RecentSearch {
   confidence?: number;
 }
 
+interface Toast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+}
+
 export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, matchHistory, referenceImagesCount, clearHistory }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'searches' | 'analytics'>('overview');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('week');
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Used to force re-render
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isToastActive, setIsToastActive] = useState<boolean>(false);
+
+  // Function to add a toast notification
+  const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    // Prevent spam by checking if a toast is already active
+    if (isToastActive) return;
+
+    setIsToastActive(true);
+
+    const newToast: Toast = {
+      id: Date.now(),
+      message,
+      type
+    };
+    setToasts(prevToasts => [...prevToasts, newToast]);
+
+    // Allow new toasts after 3 seconds
+    setTimeout(() => {
+      setIsToastActive(false);
+    }, 3000);
+  };
+
+  // Function to remove a toast notification
+  const removeToast = (id: number) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  };
+
+  // Function to refresh the dashboard data
+  const refreshDashboard = () => {
+    console.log('Refreshing dashboard...');
+    setRefreshKey(prevKey => prevKey + 1); // Increment the key to force re-render
+    addToast('Dashboard refreshed successfully', 'success'); // Blue gradient toast
+  };
+
+  // Function to clear history with toast notification
+  const handleClearHistory = () => {
+    if (clearHistory) {
+      clearHistory();
+      addToast('History cleared successfully', 'error'); // Light red toast
+    }
+  };
+
+  // Log when the dashboard is refreshed
+  useEffect(() => {
+    console.log('Dashboard refreshed with key:', refreshKey);
+  }, [refreshKey]);
 
   // Calculate statistics based on real data
   // Log the data we're receiving
@@ -176,13 +231,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
 
     // If we have match history, distribute it across the chart
     if (Array.isArray(matchHistory) && matchHistory.length > 0) {
+      console.log('Processing match history for chart:', matchHistory);
+
       // Process each match and add to the appropriate time period
       matchHistory.forEach(match => {
-        if (!match.timestamp) return;
+        if (!match.timestamp) {
+          console.log('Match missing timestamp:', match);
+          return;
+        }
 
         const matchDate = match.timestamp instanceof Date
           ? match.timestamp
           : new Date(match.timestamp);
+
+        console.log('Match date:', matchDate);
 
         let periodIndex = 0;
 
@@ -191,18 +253,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
           case 'day':
             // Divide the day into 6 periods of 4 hours each
             periodIndex = Math.floor(matchDate.getHours() / 4);
+            console.log('Day period:', periodIndex, 'for hour:', matchDate.getHours());
             break;
           case 'week':
             // Get day of week (0 = Sunday, 1 = Monday, etc.)
-            periodIndex = (matchDate.getDay() + 6) % 7; // Convert to 0 = Monday
+            periodIndex = matchDate.getDay();
+            if (periodIndex === 0) periodIndex = 6; // Sunday becomes index 6
+            else periodIndex--; // Other days shift down by 1 (Monday = 0)
+            console.log('Week period:', periodIndex, 'for day:', matchDate.getDay());
             break;
           case 'month':
             // Divide the month into 4 weeks
-            periodIndex = Math.floor(matchDate.getDate() / 7);
+            periodIndex = Math.min(3, Math.floor((matchDate.getDate() - 1) / 7));
+            console.log('Month period:', periodIndex, 'for date:', matchDate.getDate());
             break;
           case 'year':
             // Month (0-11)
             periodIndex = matchDate.getMonth();
+            console.log('Year period:', periodIndex, 'for month:', matchDate.getMonth() + 1);
             break;
         }
 
@@ -214,16 +282,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
         data[periodIndex].searches++;
 
         // If this was a match, increment the found count
-        if (match.found || match.distance < 0.6) {
+        if (match.found || (typeof match.distance === 'number' && match.distance < 0.6)) {
           data[periodIndex].found++;
         }
       });
-    } else {
-      // If no data, add some dummy data for visualization
-      for (let i = 0; i < labels.length; i++) {
-        data[i].searches = Math.floor(Math.random() * 5);
-        data[i].found = Math.floor(Math.random() * data[i].searches);
-      }
+
+      console.log('Final chart data:', data);
     }
 
     return data;
@@ -231,11 +295,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
 
   const chartData = generateChartData();
 
+  // Debug log to see what's happening with the chart data
+  console.log('Chart Data:', chartData);
+  console.log('Match History:', matchHistory);
+
   // Calculate max value for chart scaling
-  const maxChartValue = Math.max(...chartData.map(item => item.searches)) * 1.2;
+  // We want the chart to scale based on the actual values
+  const maxSearches = Math.max(...chartData.map(item => item.searches));
+  const maxFound = Math.max(...chartData.map(item => item.found));
+
+  // Calculate the maximum value for scaling
+  // We'll use this to determine the height of the chart container
+  const maxValue = Math.max(maxSearches, maxFound, 1);
+
+  // Calculate the scale factor (pixels per unit)
+  // The chart height is 250px, and we want to leave some space at the top
+  const chartHeight = 220; // pixels
+  const pixelsPerUnit = chartHeight / maxValue;
+
+  console.log('Chart Data:', chartData);
+  console.log('Max Value:', maxValue);
+  console.log('Pixels Per Unit:', pixelsPerUnit);
 
   return (
     <div className="dashboard-overlay">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </div>
       <div className="dashboard-content">
         <div className="dashboard-header">
           <h2>Guardian Vision Dashboard</h2>
@@ -329,14 +423,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <button
-                  className="clear-history-button"
-                  onClick={() => clearHistory ? clearHistory() : null}
-                  title="Clear search history"
-                  disabled={!clearHistory || matchHistory.length === 0}
-                >
-                  Clear History
-                </button>
+                <div className="button-group">
+                  <button
+                    className="refresh-button"
+                    onClick={refreshDashboard}
+                    title="Refresh dashboard"
+                  >
+                    <span>Refresh</span>
+                    <RefreshCw size={16} />
+                  </button>
+                  <button
+                    className="clear-history-button"
+                    onClick={handleClearHistory}
+                    title="Clear search history"
+                    disabled={!clearHistory || matchHistory.length === 0}
+                  >
+                    <span>Clear History</span>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
 
               <div className="search-results">
@@ -404,36 +509,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
               </div>
 
               <div className="chart-container">
-                <div className="chart">
-                  {chartData.map((item, index) => (
-                    <div key={index} className="chart-column">
-                      <div className="chart-bars">
+                {totalSearches === 0 ? (
+                  <div className="no-data-message">
+                    <p>No search data available yet. Start using the application to see analytics.</p>
+                  </div>
+                ) : (
+                  <div className="chart-content">
+                    <div className="chart">
+                      {chartData.map((item, index) => (
                         <div
-                          className="chart-bar searches"
-                          style={{ height: `${(item.searches / maxChartValue) * 100}%` }}
-                          title={`${item.searches} searches`}
-                        ></div>
-                        <div
-                          className="chart-bar found"
-                          style={{ height: `${(item.found / maxChartValue) * 100}%` }}
-                          title={`${item.found} found`}
-                        ></div>
-                      </div>
-                      <div className="chart-label">{item.label}</div>
+                          key={index}
+                          className="chart-column"
+                          title={`${item.label}: ${item.searches} searches, ${item.found} found`}
+                        >
+                          <div className="chart-bars">
+                            <div
+                              className="chart-bar searches"
+                              style={{
+                                height: item.searches > 0 ? `${Math.max(4, item.searches * pixelsPerUnit)}px` : '0px',
+                                display: item.searches > 0 ? 'block' : 'none'
+                              }}
+                              title={`Total Searches: ${item.searches}`}
+                              data-count={item.searches}
+                            ></div>
+                            <div
+                              className="chart-bar found"
+                              style={{
+                                height: item.found > 0 ? `${Math.max(4, item.found * pixelsPerUnit)}px` : '0px',
+                                display: item.found > 0 ? 'block' : 'none'
+                              }}
+                              title={`Persons Found: ${item.found}`}
+                              data-count={item.found}
+                            ></div>
+                          </div>
+                          <div className="chart-label">{item.label}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="chart-legend">
-                  <div className="legend-item">
-                    <div className="legend-color searches"></div>
-                    <div className="legend-label">Total Searches</div>
+                    <div className="chart-legend">
+                      <div className="legend-item">
+                        <div className="legend-color searches"></div>
+                        <div className="legend-label">Total Searches</div>
+                      </div>
+                      <div className="legend-item">
+                        <div className="legend-color found"></div>
+                        <div className="legend-label">Persons Found</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="legend-item">
-                    <div className="legend-color found"></div>
-                    <div className="legend-label">Persons Found</div>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="analytics-summary">

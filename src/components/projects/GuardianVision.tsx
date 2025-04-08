@@ -1721,22 +1721,33 @@ const GuardianVision: React.FC = () => {
       <div className="tutorial-overlay">
         <div className="tutorial-content">
           <h2>How to Use Guardian Vision</h2>
+          <p className="tutorial-intro">Guardian Vision helps you locate missing persons using advanced facial recognition technology. Follow these steps to get started:</p>
           <div className="tutorial-steps">
             <div className="tutorial-step">
-              <h3>Step 1: Upload a Source Image</h3>
-              <p>Upload a clear photo of the person you're looking for.</p>
+              <h3>Step 1: Upload Reference Images</h3>
+              <p>Upload 3-5 clear photos of the person you're looking for. Multiple reference images improve recognition accuracy.</p>
             </div>
             <div className="tutorial-step">
-              <h3>Step 2: Select Search Sources</h3>
-              <p>Choose where you want to search for matches (webcam, CCTV, etc.).</p>
+              <h3>Step 2: Choose Search Method</h3>
+              <p>Select from available search sources:</p>
+              <ul>
+                <li><strong>Local Media</strong>: Upload images or videos from your device</li>
+                <li><strong>Live Webcam</strong>: Use your computer's camera for testing</li>
+                <li><strong>CCTV Cameras</strong>: Connect to surveillance networks</li>
+                <li><strong>Drone Feeds</strong>: Connect to aerial surveillance</li>
+              </ul>
             </div>
             <div className="tutorial-step">
-              <h3>Step 3: Start Detection</h3>
-              <p>Click "Start Detection" to begin searching for matches.</p>
+              <h3>Step 3: Test Face Recognition</h3>
+              <p>Use the "Start Detection" button to test how the face recognition model works with your reference images. This is for testing purposes only.</p>
             </div>
             <div className="tutorial-step">
               <h3>Step 4: Review Results</h3>
-              <p>Matches will be highlighted in green with confidence scores.</p>
+              <p>Matches will be highlighted with confidence scores. View match details in the processed results section.</p>
+            </div>
+            <div className="tutorial-step">
+              <h3>Step 5: Use the Dashboard</h3>
+              <p>Access the Dashboard to view analytics, recent searches, and performance metrics. Use the Refresh button to update data and Clear History to remove search records.</p>
             </div>
           </div>
           <button className="tutorial-close" onClick={onClose}>Got it!</button>
