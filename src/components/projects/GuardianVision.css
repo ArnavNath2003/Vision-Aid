@@ -817,7 +817,7 @@
   width: 640px;
   height: 480px;
   margin: 20px auto;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
   background: #000;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -826,29 +826,31 @@
 
 .webcam-container video {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
 .webcam-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1000 !important; /* Extremely high z-index to ensure it's on top */
   pointer-events: none;
-  /* Add a subtle glow effect to make landmarks more visible */
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
-  /* Removed mix-blend-mode as it was causing visual artifacts */
-}
-
-/* Add styles for facial landmarks to make them more visible */
-.webcam-overlay canvas {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* Ensure the canvas is visible */
+  opacity: 1 !important;
+  /* Remove any filters that might be affecting visibility */
+  filter: none !important;
+  /* Ensure it's displayed */
+  display: block !important;
+  /* Prevent any transforms that might affect positioning */
+  transform: none !important;
+  /* Make sure it's transparent */
+  background: transparent !important;
 }
 
 /* Enhance the face match label */
@@ -879,33 +881,51 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  max-width: 300px;
-  max-height: 200px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  max-width: 350px;
+  max-height: 250px;
   overflow-y: auto;
   z-index: 30;
-  font-family: monospace;
-  backdrop-filter: blur(5px);
-  opacity: 0.8;
+  font-family: 'Consolas', monospace;
+  backdrop-filter: blur(10px);
+  opacity: 0.9;
   transition: all 0.3s ease;
-  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform-origin: top right;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+/* Debug panel header */
+.debug-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.debug-panel-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: inherit;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
 }
 
 /* Debug panel toggle button */
 .debug-panel-toggle {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 20px;
-  height: 20px;
-  background-color: rgba(255, 255, 255, 0.3);
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.7), rgba(147, 112, 219, 0.7));
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
+  border-radius: 8px;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: bold;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -913,21 +933,25 @@
   cursor: pointer;
   z-index: 2;
   padding: 0;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .debug-panel-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.9), rgba(147, 112, 219, 0.9));
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Expanded and collapsed states for the debug panel content */
 .match-results-debug pre.expanded {
   max-height: 200px;
   opacity: 1;
-  padding-top: 15px; /* Make room for the toggle button */
+  padding-top: 25px; /* Make room for the toggle button */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .match-results-debug pre.collapsed {
@@ -936,6 +960,7 @@
   overflow: hidden;
   padding: 0;
   margin: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Search and Testing Container */
@@ -1226,24 +1251,31 @@
 
 /* Match found styling */
 .match-results-debug.match {
-  color: #00ff00; /* Green text for match */
-  border: 1px solid rgba(0, 255, 0, 0.3);
+  color: #4ade80; /* Softer green text for match */
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(74, 222, 128, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 50, 0, 0.8));
 }
 
 /* No match styling */
 .match-results-debug.no-match {
   color: #ff6b6b; /* Light red text for no match */
   border: 1px solid rgba(255, 107, 107, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 107, 107, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(50, 0, 0, 0.8));
 }
 
 .match-results-debug:hover {
   opacity: 1;
+  transform: scale(1.02);
 }
 
 .match-results-debug pre {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
 }
 
 .face-match-label.match {
@@ -2806,6 +2838,11 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .setting-description {

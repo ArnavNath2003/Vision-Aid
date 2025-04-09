@@ -60,6 +60,8 @@ const GuardianVision: React.FC = () => {
   const [modelError, setModelError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
+  // State for toggling between video and canvas views
+  const [showVideoFeed, setShowVideoFeed] = useState(true);
   const [showCamera, setShowCamera] = useState(false);
   const [faceEncodings, setFaceEncodings] = useState<FaceEncoding[]>([]);
   const [referenceImagesCount, setReferenceImagesCount] = useState<number>(0);
@@ -188,11 +190,7 @@ const GuardianVision: React.FC = () => {
     };
   }, [geolocationEnabled, currentLocation]);
 
-  const videoStyle = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover' as const
-  };
+  // Video styling is now applied directly in the JSX
 
   // Model loading is now handled by the useFaceApiModels hook
 
@@ -340,21 +338,26 @@ const GuardianVision: React.FC = () => {
         return [];
       }
 
-      // Ensure canvas dimensions match video dimensions
-      const displaySize = { width: video.videoWidth, height: video.videoHeight };
-      if (displaySize.width === 0 || displaySize.height === 0) {
+      // Get video dimensions
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      if (videoWidth === 0 || videoHeight === 0) {
         console.log('Invalid video dimensions, skipping frame');
         return [];
       }
 
-      // Update canvas dimensions if needed
-      if (canvas.width !== displaySize.width || canvas.height !== displaySize.height) {
-        canvas.width = displaySize.width;
-        canvas.height = displaySize.height;
-        console.log(`Updated canvas dimensions to: ${canvas.width}x${canvas.height}`);
-      }
+      // Set canvas dimensions to match video
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
 
+      // Create display size object for face-api.js
+      const displaySize = { width: videoWidth, height: videoHeight };
+
+      // Match dimensions for face-api.js
       faceapi.matchDimensions(canvas, displaySize);
+
+      console.log('Canvas dimensions set to:', canvas.width, 'x', canvas.height);
 
       // Get canvas context with willReadFrequently flag to optimize performance
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -370,15 +373,10 @@ const GuardianVision: React.FC = () => {
         lastHeightRef.current = canvas.height;
       }
 
+      // Always process face detection, but only draw landmarks if they're visible
+
       // Clear previous drawings
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // First draw the video frame on the canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Add a slight overlay to reduce flickering
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Check if we have face encodings to match against
       if (faceEncodings.length === 0) {
@@ -618,22 +616,24 @@ const GuardianVision: React.FC = () => {
     // These indices are based on the 68-point facial landmark model
     // used by face-api.js
     const keyIndices = [
-      // Jaw line (fewer points)
-      0, 4, 8, 12, 16,
-      // Right eyebrow (outer and inner corners)
-      17, 21,
-      // Left eyebrow (inner and outer corners)
-      22, 26,
-      // Nose bridge (top and bottom)
-      27, 30,
-      // Nose tip
-      33,
-      // Right eye (corners and top/bottom)
-      36, 39,
-      // Left eye (corners and top/bottom)
-      42, 45,
-      // Mouth (corners, top, bottom)
-      48, 51, 54, 57
+      // Jaw line (more points for better face outline)
+      0, 2, 4, 6, 8, 10, 12, 14, 16,
+      // Right eyebrow (all points)
+      17, 18, 19, 20, 21,
+      // Left eyebrow (all points)
+      22, 23, 24, 25, 26,
+      // Nose bridge (all points)
+      27, 28, 29, 30,
+      // Nose bottom and nostrils
+      31, 32, 33, 34, 35,
+      // Right eye (all points)
+      36, 37, 38, 39, 40, 41,
+      // Left eye (all points)
+      42, 43, 44, 45, 46, 47,
+      // Outer mouth (all points)
+      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+      // Inner mouth (optional, for more detail)
+      60, 61, 62, 63, 64, 65, 66, 67
     ];
 
     // Return only the key points
@@ -692,21 +692,26 @@ const GuardianVision: React.FC = () => {
   };
 
   // Function to render detections without running face detection again
-  const renderDetections = (video: HTMLVideoElement, canvas: HTMLCanvasElement, detections: any[]) => {
+  const renderDetections = (_video: HTMLVideoElement, canvas: HTMLCanvasElement, detections: any[]) => {
     try {
       // Get canvas context with willReadFrequently flag
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (!ctx) return;
+      if (!ctx) {
+        console.error('Failed to get canvas context');
+        return;
+      }
+
+      // If landmarks are hidden, don't render anything on the canvas
+      if (showVideoFeed) {
+        // Just clear the canvas and return
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
 
       console.log(`Rendering ${detections.length} detections on canvas ${canvas.width}x${canvas.height}`);
 
-      // Clear and draw video frame
+      // Clear the canvas completely to ensure transparency
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Add a slight overlay to reduce flickering
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw all detections
       detections.forEach(detection => {
@@ -722,25 +727,11 @@ const GuardianVision: React.FC = () => {
         // Log the box we're about to draw
         console.log('Drawing box:', detection.detection.box);
 
-        // Apply privacy mode - blur non-matching faces if enabled
+        // Privacy mode is now handled by the video element's CSS filter
+        // We don't need to apply blur here as it would interfere with landmark visibility
+        // Just log that privacy mode is enabled if applicable
         if (privacyMode && !isMatch) {
-          try {
-            // Get the face region
-            const box = detection.detection.box;
-            const faceRegion = ctx.getImageData(box.x, box.y, box.width, box.height);
-
-            // Apply a blur effect to the face region
-            // This is a simple blur implementation - in a production app, you'd use a more sophisticated algorithm
-            const blurRadius = 10;
-            const blurredFace = applyBlurEffect(faceRegion, blurRadius, box.width, box.height);
-
-            // Put the blurred face back on the canvas
-            ctx.putImageData(blurredFace, box.x, box.y);
-
-            console.log('Applied blur to non-matching face (privacy mode)');
-          } catch (error) {
-            console.error('Error applying privacy blur:', error);
-          }
+          console.log('Privacy mode enabled for non-matching face');
         }
 
         const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
@@ -748,7 +739,13 @@ const GuardianVision: React.FC = () => {
             ? showConfidence ? `Match: ${confidence.toFixed(2)}%` : 'Match'
             : 'No Match',
           boxColor: isMatch ? '#00ff00' : '#ff0000',
-          lineWidth: 2
+          lineWidth: 8, // Much thicker line for better visibility
+          drawLabelOptions: {
+            fontSize: 24, // Even larger font size
+            fontStyle: 'bold',
+            padding: 12,
+            backgroundColor: isMatch ? 'rgba(0, 128, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)'
+          }
         });
 
         // Draw the box
@@ -765,9 +762,9 @@ const GuardianVision: React.FC = () => {
           const landmarks = detection.landmarks;
           console.log(`Drawing landmarks with ${landmarks.positions.length} points`);
 
-          // Set styles based on match status
-          const color = isMatch ? '#00ff00' : '#ff0000';
-          const glowColor = isMatch ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)';
+          // Set styles based on match status - using brighter colors for better visibility
+          const color = isMatch ? '#00ff00' : '#ff3333';
+          const glowColor = isMatch ? 'rgba(0, 255, 0, 0.9)' : 'rgba(255, 51, 51, 0.9)';
 
           // Select key facial landmarks instead of using all of them
           // This makes the overlay look cleaner and less like a filter
@@ -775,40 +772,118 @@ const GuardianVision: React.FC = () => {
           console.log(`Selected ${keyPoints.length} key points for landmarks`);
 
           if (keyPoints.length > 0) {
-            // Draw face outline with thicker lines
+            // Draw face outline with extremely thick lines for maximum visibility
             ctx.beginPath();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 4; // Even thicker lines
+            ctx.lineWidth = 15; // Extremely thick lines
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
 
-            // Add stronger glow effect to lines
+            // Add very strong glow effect to lines
             ctx.shadowColor = glowColor;
-            ctx.shadowBlur = 12;
+            ctx.shadowBlur = 35; // Very strong glow
 
-            // Connect key landmarks with lines
-            ctx.moveTo(keyPoints[0].x, keyPoints[0].y);
-            for (let i = 1; i < keyPoints.length; i++) {
-              ctx.lineTo(keyPoints[i].x, keyPoints[i].y);
+            // Draw jaw line
+            const jawPoints = keyPoints.slice(0, 9);
+            ctx.beginPath();
+            ctx.moveTo(jawPoints[0].x, jawPoints[0].y);
+            for (let i = 1; i < jawPoints.length; i++) {
+              ctx.lineTo(jawPoints[i].x, jawPoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw right eyebrow
+            const rightEyebrowPoints = keyPoints.slice(9, 14);
+            ctx.beginPath();
+            ctx.moveTo(rightEyebrowPoints[0].x, rightEyebrowPoints[0].y);
+            for (let i = 1; i < rightEyebrowPoints.length; i++) {
+              ctx.lineTo(rightEyebrowPoints[i].x, rightEyebrowPoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw left eyebrow
+            const leftEyebrowPoints = keyPoints.slice(14, 19);
+            ctx.beginPath();
+            ctx.moveTo(leftEyebrowPoints[0].x, leftEyebrowPoints[0].y);
+            for (let i = 1; i < leftEyebrowPoints.length; i++) {
+              ctx.lineTo(leftEyebrowPoints[i].x, leftEyebrowPoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw nose bridge
+            const noseBridgePoints = keyPoints.slice(19, 23);
+            ctx.beginPath();
+            ctx.moveTo(noseBridgePoints[0].x, noseBridgePoints[0].y);
+            for (let i = 1; i < noseBridgePoints.length; i++) {
+              ctx.lineTo(noseBridgePoints[i].x, noseBridgePoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw nose bottom
+            const noseBottomPoints = keyPoints.slice(23, 28);
+            ctx.beginPath();
+            ctx.moveTo(noseBottomPoints[0].x, noseBottomPoints[0].y);
+            for (let i = 1; i < noseBottomPoints.length; i++) {
+              ctx.lineTo(noseBottomPoints[i].x, noseBottomPoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw right eye
+            const rightEyePoints = keyPoints.slice(28, 34);
+            ctx.beginPath();
+            ctx.moveTo(rightEyePoints[0].x, rightEyePoints[0].y);
+            for (let i = 1; i < rightEyePoints.length; i++) {
+              ctx.lineTo(rightEyePoints[i].x, rightEyePoints[i].y);
             }
             ctx.closePath();
             ctx.stroke();
+
+            // Draw left eye
+            const leftEyePoints = keyPoints.slice(34, 40);
+            ctx.beginPath();
+            ctx.moveTo(leftEyePoints[0].x, leftEyePoints[0].y);
+            for (let i = 1; i < leftEyePoints.length; i++) {
+              ctx.lineTo(leftEyePoints[i].x, leftEyePoints[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw outer mouth
+            const outerMouthPoints = keyPoints.slice(40, 52);
+            ctx.beginPath();
+            ctx.moveTo(outerMouthPoints[0].x, outerMouthPoints[0].y);
+            for (let i = 1; i < outerMouthPoints.length; i++) {
+              ctx.lineTo(outerMouthPoints[i].x, outerMouthPoints[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw inner mouth
+            const innerMouthPoints = keyPoints.slice(52, 60);
+            ctx.beginPath();
+            ctx.moveTo(innerMouthPoints[0].x, innerMouthPoints[0].y);
+            for (let i = 1; i < innerMouthPoints.length; i++) {
+              ctx.lineTo(innerMouthPoints[i].x, innerMouthPoints[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
             ctx.shadowBlur = 0;
 
-            // Draw much larger points for each key landmark
+            // Draw extremely large points for each key landmark
             keyPoints.forEach((point: { x: number; y: number }) => {
               // Draw outer glow
               ctx.beginPath();
-              ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI); // Much bigger dots (8px)
+              ctx.arc(point.x, point.y, 15, 0, 2 * Math.PI); // Extremely large dots (15px)
               ctx.fillStyle = color;
               ctx.shadowColor = glowColor;
-              ctx.shadowBlur = 15; // Stronger glow
+              ctx.shadowBlur = 30; // Very strong glow
               ctx.fill();
               ctx.shadowBlur = 0;
 
-              // Add a larger white center for better visibility
+              // Add a white center for better visibility
               ctx.beginPath();
-              ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI); // Bigger white center (3px)
+              ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI); // Larger white center (6px)
               ctx.fillStyle = 'white';
               ctx.fill();
             });
@@ -1050,9 +1125,22 @@ const GuardianVision: React.FC = () => {
     const video = videoRef.current;
     const canvas = webcamCanvasRef.current;
 
+    // Make sure canvas is visible and positioned correctly
+    canvas.style.display = 'block';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '100';
+
+    // Ensure canvas dimensions match video dimensions
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Log important information for debugging
     console.log('Starting webcam stream processing');
     console.log('Video readyState:', video.readyState);
     console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
     console.log('isWebcamActive state:', isWebcamActive);
     console.log('processingActive ref:', processingActive.current);
 
@@ -1136,6 +1224,20 @@ const GuardianVision: React.FC = () => {
 
       try {
         frameCount++;
+
+        // Ensure canvas dimensions match video dimensions on every frame
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          console.log('Updated canvas dimensions to match video:', canvas.width, 'x', canvas.height);
+        }
+
+        // Set canvas visibility based on landmark toggle state
+        canvas.style.display = !showVideoFeed ? 'block' : 'none';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '100';
 
         // Run face detection on every frame to ensure dynamic movement
         // This ensures the landmarks move with the face in real-time
@@ -1298,6 +1400,19 @@ const GuardianVision: React.FC = () => {
 
         // Reset the processing flag
         processingActive.current = false;
+
+        // Initialize the canvas to ensure it's ready
+        if (webcamCanvasRef.current) {
+          const canvas = webcamCanvasRef.current;
+          canvas.style.display = !showVideoFeed ? 'block' : 'none';
+          canvas.style.position = 'absolute';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.zIndex = '100';
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          console.log('Canvas initialized with dimensions:', canvas.width, 'x', canvas.height);
+        }
 
         // Set webcam as active BEFORE starting processing
         setIsWebcamActive(true);
@@ -2396,27 +2511,74 @@ const GuardianVision: React.FC = () => {
           display: isWebcamActive ? 'block' : 'none'
         }}
       >
+        {/* Toggle button for facial landmarks */}
+        <button
+          className="landmarks-toggle-button"
+          onClick={() => setShowVideoFeed(!showVideoFeed)}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            zIndex: 2000,
+            background: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '4px',
+            padding: '5px 10px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 'bold'
+          }}
+        >
+          {showVideoFeed ? 'Show Landmarks' : 'Hide Landmarks'}
+        </button>
+
+        {/* Video element - always visible */}
         <video
           ref={videoRef}
-          style={videoStyle}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 1
+          }}
           playsInline
+          muted
+          autoPlay
         />
+
+        {/* Canvas overlay for facial landmarks - visibility toggled */}
         <canvas
           ref={webcamCanvasRef}
           className="webcam-overlay"
           data-will-read-frequently="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 100,
+            background: 'transparent' // Transparent background for landmarks
+          }}
         />
 
         {/* Match results debug panel */}
         {matchResults && (
           <div className={`match-results-debug ${matchResults.includes('NO MATCH') ? 'no-match' : 'match'}`}>
-            <button
-              className="debug-panel-toggle"
-              onClick={() => setIsDebugPanelExpanded(!isDebugPanelExpanded)}
-              title={isDebugPanelExpanded ? "Collapse" : "Expand"}
-            >
-              {isDebugPanelExpanded ? "−" : "+"}
-            </button>
+            <div className="debug-panel-header">
+              <h4>{matchResults.includes('NO MATCH') ? 'Detection Analysis' : 'Match Analysis'}</h4>
+              <button
+                className="debug-panel-toggle"
+                onClick={() => setIsDebugPanelExpanded(!isDebugPanelExpanded)}
+                title={isDebugPanelExpanded ? "Collapse" : "Expand"}
+              >
+                {isDebugPanelExpanded ? "−" : "+"}
+              </button>
+            </div>
             <pre className={isDebugPanelExpanded ? "expanded" : "collapsed"}>{matchResults}</pre>
           </div>
         )}
