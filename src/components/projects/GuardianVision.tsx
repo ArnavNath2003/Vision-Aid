@@ -75,7 +75,7 @@ const GuardianVision: React.FC = () => {
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [matchThreshold, setMatchThreshold] = useState(0.6);
   const [frameSkip, setFrameSkip] = useState(2);
-  const [performanceMode, setPerformanceMode] = useState(false);
+  // Performance Mode option removed - accuracy is critical for missing person detection
   const [showConfidence, setShowConfidence] = useState(true);
   const [matchHistory, setMatchHistory] = useState<FaceMatch[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -388,24 +388,14 @@ const GuardianVision: React.FC = () => {
         return [];
       }
 
-      // Determine which face detection model to use
-      let detectionOptions;
-
-      if (performanceMode) {
-        // Use TinyYolov2 in performance mode
-        detectionOptions = new faceapi.TinyYolov2Options({
-          scoreThreshold: 0.5,
-          inputSize: 224
-        });
-      } else {
-        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
-        detectionOptions = new faceapi.SsdMobilenetv1Options({
-          // Use a very low confidence threshold to detect more faces
-          minConfidence: 0.2,
-          // Increase the number of results to consider more potential faces
-          maxResults: 15
-        });
-      }
+      // Use SSD MobileNet with optimized parameters for face detection
+      // We've removed the Performance Mode option as accuracy is critical for missing person detection
+      const detectionOptions = new faceapi.SsdMobilenetv1Options({
+        // Use a low confidence threshold to detect more challenging faces
+        minConfidence: 0.2,
+        // Increase the number of results to consider more potential faces
+        maxResults: 15
+      });
 
       // Detect faces
       // Increment frame counter
@@ -1058,26 +1048,15 @@ const GuardianVision: React.FC = () => {
     try {
       console.log(`Processing reference image ${index + 1}`);
 
-      // Determine which face detection model to use based on performanceMode setting
-      let detectionOptions;
-
-      if (performanceMode) {
-        // Use TinyYolov2 in performance mode
-        detectionOptions = new faceapi.TinyYolov2Options({
-          scoreThreshold: 0.5,
-          inputSize: 224
-        });
-        console.log(`Using TinyYolov2 (performance mode) for face detection on image ${index + 1}`);
-      } else {
-        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
-        detectionOptions = new faceapi.SsdMobilenetv1Options({
-          // Use a very low confidence threshold to detect more faces
-          minConfidence: 0.2,
-          // Increase the number of results to consider more potential faces
-          maxResults: 15
-        });
-        console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
-      }
+          // Use SSD MobileNet with optimized parameters for face detection
+      // We've removed the Performance Mode option as accuracy is critical for missing person detection
+      const detectionOptions = new faceapi.SsdMobilenetv1Options({
+        // Use a low confidence threshold to detect more challenging faces
+        minConfidence: 0.2,
+        // Increase the number of results to consider more potential faces
+        maxResults: 15
+      });
+      console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
 
       const detections = await faceapi.detectAllFaces(img, detectionOptions)
         .withFaceLandmarks()
@@ -1581,26 +1560,15 @@ const GuardianVision: React.FC = () => {
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Determine which face detection model to use based on performanceMode setting
-      let detectionOptions;
-
-      if (performanceMode) {
-        // Use TinyYolov2 in performance mode
-        detectionOptions = new faceapi.TinyYolov2Options({
-          scoreThreshold: 0.5,
-          inputSize: 224
-        });
-        console.log('Using TinyYolov2 (performance mode) for local media processing');
-      } else {
-        // Use SSD MobileNet with very permissive parameters to detect more challenging faces
-        detectionOptions = new faceapi.SsdMobilenetv1Options({
-          // Use a very low confidence threshold to detect more faces
-          minConfidence: 0.2,
-          // Increase the number of results to consider more potential faces
-          maxResults: 15
-        });
-        console.log('Using optimized SSD MobileNet for local media processing');
-      }
+      // Use SSD MobileNet with optimized parameters for face detection
+      // We've removed the Performance Mode option as accuracy is critical for missing person detection
+      const detectionOptions = new faceapi.SsdMobilenetv1Options({
+        // Use a low confidence threshold to detect more challenging faces
+        minConfidence: 0.2,
+        // Increase the number of results to consider more potential faces
+        maxResults: 15
+      });
+      console.log('Using optimized SSD MobileNet for local media processing');
 
       const detections = await faceapi.detectAllFaces(canvas, detectionOptions)
         .withFaceLandmarks()
@@ -2219,8 +2187,9 @@ const GuardianVision: React.FC = () => {
           setMatchThresholdSlider={setMatchThresholdSlider}
           frameSkip={frameSkip}
           setFrameSkip={setFrameSkip}
-          performanceMode={performanceMode}
-          setPerformanceMode={setPerformanceMode}
+          // Performance Mode option removed - accuracy is critical for missing person detection
+          performanceMode={false}
+          setPerformanceMode={() => {/* No-op */}}
           onOpenDashboard={() => setShowDashboard(true)}
         />
 

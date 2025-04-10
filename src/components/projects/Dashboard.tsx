@@ -125,11 +125,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
     ? matchHistory.filter(match => match && match.distance < 0.6).length
     : 0;
 
-  // Calculate average confidence
+  // Calculate average confidence - only for positive matches
   let avgConfidence = 0;
   if (Array.isArray(matchHistory) && matchHistory.length > 0) {
+    // Only consider positive matches (distance < 0.6)
     const confidences = matchHistory
-      .filter(match => match && typeof match.distance === 'number')
+      .filter(match => match && typeof match.distance === 'number' && match.distance < 0.6)
       .map(match => (1 - match.distance) * 100);
 
     if (confidences.length > 0) {
@@ -429,24 +430,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
           <span style={{ fontWeight: 500 }}>Dashboard Debug</span>
         </div>
         <div style={{ paddingLeft: '24px', fontSize: '0.85rem' }}>
-          <div className="coordinate-row">
-            <span className="coordinate-label">History:</span>
+          <div className="coordinate-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="coordinate-label" style={{ width: '70px' }}>History:</span>
             <span className="coordinate-value">{matchHistory.length}</span>
           </div>
-          <div className="coordinate-row">
-            <span className="coordinate-label">Searches:</span>
+          <div className="coordinate-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="coordinate-label" style={{ width: '70px' }}>Searches:</span>
             <span className="coordinate-value">{totalSearches}</span>
           </div>
-          <div className="coordinate-row">
-            <span className="coordinate-label">Matches:</span>
+          <div className="coordinate-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="coordinate-label" style={{ width: '70px' }}>Matches:</span>
             <span className="coordinate-value">{matchesFound}</span>
           </div>
-          <div className="coordinate-row">
-            <span className="coordinate-label">Images:</span>
+          <div className="coordinate-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="coordinate-label" style={{ width: '70px' }}>Images:</span>
             <span className="coordinate-value">{referenceImagesCount}</span>
           </div>
-          <div className="coordinate-row">
-            <span className="coordinate-label">Success:</span>
+          <div className="coordinate-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="coordinate-label" style={{ width: '70px' }}>Success:</span>
             <span className="coordinate-value">{currentStats.successRate}%</span>
           </div>
           <div className="location-update-time">
@@ -714,7 +715,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
 
                 <div className="summary-card">
                   <h4>Recognition Accuracy</h4>
-                  <div className="summary-value">{avgConfidence.toFixed(1)}%</div>
+                  <div className="summary-value">{matchesFound > 0 ? avgConfidence.toFixed(1) : '0.0'}%</div>
                   <p>Average confidence score for positive matches</p>
                 </div>
               </div>
