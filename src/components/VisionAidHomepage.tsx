@@ -296,8 +296,8 @@ const VisionAidHomepage = () => {
       color: "primary"
     },
     {
-      title: "Smart Infrastructure Intelligence",
-      description: "Pioneering proactive infrastructure management using advanced AI.",
+      title: "Guardian Vision",
+      description: "AI-powered facial recognition system for locating missing persons.",
       icon: <Layers className="project-icon" />,
       color: "success"
     }
@@ -313,7 +313,7 @@ const VisionAidHomepage = () => {
       {
         icon: <Clock className="feature-icon" />,
         title: "Real-Time Monitoring",
-        description: "Continuous urban infrastructure health tracking and analysis."
+        description: "VisionAid leverages high-speed computer vision algorithms to continuously analyze urban traffic and detect individuals instantly, ensuring immediate situational awareness and response."
       },
       {
         icon: <Network className="feature-icon" />,
@@ -350,9 +350,9 @@ const VisionAidHomepage = () => {
 
   const TechnologiesSection = () => {
     const technologies = [
-      { icon: <Smartphone className="w-10 h-10" />, name: "Mobile Integration" },
-      { icon: <Database className="w-10 h-10" />, name: "Big Data Analytics" },
-      { icon: <Map className="w-10 h-10" />, name: "Geospatial Mapping" }
+      { icon: <Smartphone className="w-10 h-10" />, name: "SSD (Single Shot MultiBox Detector)" },
+      { icon: <Database className="w-10 h-10" />, name: "PyTorch and OpenCV" },
+      { icon: <Map className="w-10 h-10" />, name: "React with TypeScript" }
     ];
 
     return (

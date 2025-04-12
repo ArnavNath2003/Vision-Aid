@@ -366,7 +366,7 @@ const About: React.FC = () => {
             >
               <div className="member-avatar"></div>
               <h3>Arnav Nath</h3>
-              <p>Lead Researcher</p>
+              <p>Full Stack Developer</p>
             </motion.div>
 
             <motion.div 
@@ -376,7 +376,7 @@ const About: React.FC = () => {
             >
               <div className="member-avatar"></div>
               <h3>Saksham Jain</h3>
-              <p>AI Specialist</p>
+              <p>Backend Developer</p>
             </motion.div>
 
             <motion.div 
@@ -386,7 +386,7 @@ const About: React.FC = () => {
             >
               <div className="member-avatar"></div>
               <h3>Aryan Sansi</h3>
-              <p>Accessibility Expert</p>
+              <p>AI Specialist</p>
             </motion.div>
             <motion.div 
               className="team-member"
@@ -395,7 +395,7 @@ const About: React.FC = () => {
             >
               <div className="member-avatar"></div>
               <h3>Varghese</h3>
-              <p>AI Specialist</p>
+              <p>Research Analyst</p>
             </motion.div>
           </div>
         </section>
