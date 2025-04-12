@@ -292,27 +292,7 @@ const Settings: React.FC<SettingsProps> = ({
                 </span>
               </div>
 
-              <div className="setting-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={performanceMode}
-                    onChange={() => handleSettingChange(
-                      'performanceMode',
-                      setPerformanceMode,
-                      !performanceMode,
-                      `Performance mode ${!performanceMode ? 'enabled' : 'disabled'}`
-                    )}
-                  />
-                  <span className="setting-label">
-                    <Zap size={18} className="setting-icon" />
-                    Performance Mode
-                  </span>
-                </label>
-                <span className="setting-description">
-                  Optimize for speed over accuracy (uses faster detection model).
-                </span>
-              </div>
+              {/* Performance Mode option removed - accuracy is critical for missing person detection */}
             </div>
           )}
         </div>
