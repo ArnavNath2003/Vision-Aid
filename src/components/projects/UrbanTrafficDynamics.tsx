@@ -46,21 +46,29 @@ const UrbanTrafficDynamics: React.FC = () => {
   };
 
   const handleAnalyze = async () => {
+    if (!file) {
+      alert("Please select a file first.");
+      return;
+    }
     setIsAnalyzing(true);
     try {
-      // Here you'll add your actual model/analysis logic
-      // Example structure:
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await fetch('/api/analyze-traffic', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // const result = await response.json();
-      // setResult(result);
+      const formData = new FormData();
+      formData.append('file', file);
+      // Replace the URL if you deploy your backend somewhere else.
+      const response = await fetch('http://localhost:5001/api/analyze-traffic', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const analysisResult: AnalysisResult = await response.json();
+      setResult(analysisResult);
     } catch (error) {
       console.error('Analysis failed:', error);
-      // Add error handling here
+      alert(`Analysis failed: ${error}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -198,6 +206,10 @@ const UrbanTrafficDynamics: React.FC = () => {
                 <h3>Recommended Signal Time</h3>
                 <p>{result.recommendedSignalTime}s</p>
               </div>
+              <div className="metric-card">
+                <h3>Congestion Level</h3>
+                <p>{result.congestionLevel}</p>
+              </div>
             </div>
           </motion.div>
         )}
@@ -207,5 +219,3 @@ const UrbanTrafficDynamics: React.FC = () => {
 };
 
 export default UrbanTrafficDynamics;
-
-
