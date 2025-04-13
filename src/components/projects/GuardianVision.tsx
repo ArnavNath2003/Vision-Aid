@@ -19,6 +19,16 @@ import Settings from './Settings';
 import LocationIndicator from './LocationIndicator';
 // Import Toast component
 import Toast from '../Toast';
+// Import data augmentation utilities
+import { createAugmentedImages } from '../../utils/dataAugmentation';
+// Import face clustering utilities
+import {
+  analyzeReferenceImages,
+  FaceDescriptorWithMetadata,
+  FaceCluster
+} from '../../utils/faceClusteringUtils';
+// Import enhanced face matching hook
+import useEnhancedFaceMatching from './EnhancedFaceMatching';
 // Import custom icons
 import cctvIcon from '../../assets/icons/cctv.svg';
 import droneIcon from '../../assets/icons/drone.svg';
@@ -32,6 +42,10 @@ export interface FaceMatch {
   confidence: number;
   found?: boolean;
   source?: string;
+  verificationLevel?: 'high' | 'medium' | 'low' | 'none';
+  individualMatches?: number; // Number of individual descriptors that matched
+  totalDescriptors?: number; // Total number of descriptors in the cluster
+  distanceRatio?: number; // Ratio between best and second-best match
 }
 
 export interface ProcessedFace {
@@ -69,6 +83,19 @@ const GuardianVision: React.FC = () => {
   const maxAllowedImages = 5; // Changed from useState to a constant since it's not changing
   const [showReferenceWarning, setShowReferenceWarning] = useState<boolean>(false);
 
+  // State for face clusters
+  const [faceClusters, setFaceClusters] = useState<FaceCluster[]>([]);
+  const [identityWarningShown, setIdentityWarningShown] = useState<boolean>(false);
+
+  // State for temporal smoothing of webcam face matching results
+  const [matchBuffer, setMatchBuffer] = useState<{isMatch: boolean, confidence: number, verificationLevel?: 'high' | 'medium' | 'low' | 'none'}[]>([]);
+  const matchBufferSize = 15; // Number of frames to consider for smoothing
+  const matchConsistencyThreshold = 0.7; // 70% of frames must agree to change state
+
+  // State to track if a face is currently detected in the frame
+  const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
+  const [lastFaceDetectionTime, setLastFaceDetectionTime] = useState<number>(0);
+
   // State for pending images (uploaded but not processed)
   const [pendingImages, setPendingImages] = useState<File[]>([]);
   const [imagesReadyToProcess, setImagesReadyToProcess] = useState<boolean>(false);
@@ -77,6 +104,8 @@ const GuardianVision: React.FC = () => {
   const [frameSkip, setFrameSkip] = useState(2);
   // Performance Mode option removed - accuracy is critical for missing person detection
   const [showConfidence, setShowConfidence] = useState(true);
+  // State for data augmentation (enabled by default)
+  const [dataAugmentation, setDataAugmentation] = useState(true);
   const [matchHistory, setMatchHistory] = useState<FaceMatch[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(false);
@@ -197,8 +226,7 @@ const GuardianVision: React.FC = () => {
   // Note: processSourceImage has been replaced by processReferenceImage
   // which supports multiple reference images for better face recognition
 
-  // Create a state variable to store the latest match results for display
-  const [matchResults, setMatchResults] = useState<string>('');
+  // Match results are now handled by the enhanced face matching hook
 
   // State to track whether panels are expanded or collapsed
   const [isDebugPanelExpanded, setIsDebugPanelExpanded] = useState<boolean>(false); // Collapsed by default
@@ -237,97 +265,19 @@ const GuardianVision: React.FC = () => {
   const lastFaceCountRef = useRef<number>(-1);
   const frameCountRef = useRef<number>(0);
 
-  const matchFace = (descriptor: Float32Array): { isMatch: boolean; confidence: number } => {
-    if (faceEncodings.length === 0) {
-      setMatchResults('No face encodings available for matching');
-      return { isMatch: false, confidence: 0 };
-    }
+  // Use enhanced face matching hook
+  const enhancedMatching = useEnhancedFaceMatching(faceEncodings, faceClusters, matchThreshold, frameCountRef);
 
-    let bestMatch = {
-      distance: Number.MAX_VALUE,
-      isMatch: false,
-      confidence: 0
-    };
-
-    // Start building the match results string without clearing console
-    // This prevents the console from blinking
-    let resultsLog = `Matching with threshold: ${matchThreshold.toFixed(2)} (lower is stricter)\n`;
-
-    // Group encodings by person (based on label prefix)
-    const personEncodings: { [key: string]: FaceEncoding[] } = {};
-
-    for (const encoding of faceEncodings) {
-      // Extract image ID from label (e.g., "Image_1_2" -> "Image_1")
-      const imageId = encoding.label.split('_').slice(0, 2).join('_');
-
-      if (!personEncodings[imageId]) {
-        personEncodings[imageId] = [];
-      }
-
-      personEncodings[imageId].push(encoding);
-    }
-
-    resultsLog += `Grouped encodings into ${Object.keys(personEncodings).length} images\n`;
-
-    // For each image, calculate average distance across all their encodings
-    for (const imageId in personEncodings) {
-      try {
-        const encodings = personEncodings[imageId];
-        let totalDistance = 0;
-        let minDistance = Number.MAX_VALUE;
-
-        // Find the minimum distance among all encodings for this image
-        resultsLog += `\nMatching against ${imageId}:\n`;
-        for (const encoding of encodings) {
-          const distance = faceapi.euclideanDistance(descriptor, encoding.descriptor);
-          totalDistance += distance;
-          minDistance = Math.min(minDistance, distance);
-          resultsLog += `  - Distance to ${encoding.label}: ${distance.toFixed(4)}\n`;
-        }
-
-        // Calculate average distance (weighted toward minimum distance)
-        const avgDistance = (minDistance * 0.7) + (totalDistance / encodings.length * 0.3);
-        resultsLog += `  - Min distance: ${minDistance.toFixed(4)}, Avg weighted distance: ${avgDistance.toFixed(4)}\n`;
-
-        // Update best match if this person is a better match
-        if (avgDistance < bestMatch.distance) {
-          const isMatch = avgDistance < matchThreshold;
-          const confidence = (1 - avgDistance) * 100;
-
-          bestMatch = {
-            distance: avgDistance,
-            isMatch,
-            confidence
-          };
-
-          resultsLog += `  - New best match: ${imageId}, distance: ${avgDistance.toFixed(4)}, ` +
-                      `isMatch: ${isMatch}, confidence: ${confidence.toFixed(2)}%\n`;
-        }
-      } catch (error) {
-        resultsLog += `Error matching against image ${imageId}: ${error}\n`;
-      }
-    }
-
-    // Add a summary of the best match
-    resultsLog += `\n=== MATCH RESULT ===\n`;
-    resultsLog += `Best match: ${bestMatch.isMatch ? 'MATCH FOUND' : 'NO MATCH'}\n`;
-    resultsLog += `Confidence: ${bestMatch.confidence.toFixed(2)}%\n`;
-    resultsLog += `Distance: ${bestMatch.distance.toFixed(4)} (threshold: ${matchThreshold.toFixed(2)})\n`;
-
-    // Update the match results state
-    setMatchResults(resultsLog);
-
-    // Use a single console.log with a dynamic label to avoid cluttering
-    // This will update the same line in the console instead of adding new lines
-    if (frameCountRef.current % 15 === 0) {
-      // Use a consistent label so the browser can group identical console messages
-      console.log('%cFace Match Results', 'color: #8a2be2; font-weight: bold', bestMatch);
-    }
-
-    return {
-      isMatch: bestMatch.isMatch,
-      confidence: bestMatch.confidence
-    };
+  const matchFace = (descriptor: Float32Array): {
+    isMatch: boolean;
+    confidence: number;
+    verificationLevel?: 'high' | 'medium' | 'low' | 'none';
+    individualMatches?: number;
+    totalDescriptors?: number;
+    distanceRatio?: number;
+  } => {
+    // Use the enhanced face matching hook instead of the original implementation
+    return enhancedMatching.matchFace(descriptor);
   };
 
   const processWebcamFrame = async (video: HTMLVideoElement, canvas: HTMLCanvasElement, _previousDetections: any[] = []): Promise<any[]> => {
@@ -416,15 +366,29 @@ const GuardianVision: React.FC = () => {
         lastFaceCountRef.current = detections.length;
       }
 
-      // If no faces detected, show a message
+      // If no faces detected, show a message and update state
       if (detections.length === 0) {
         // Draw a message on canvas
         ctx.font = '20px Arial';
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.fillText('No faces detected', canvas.width / 2, canvas.height / 2);
+
+        // Update face detection state
+        setIsFaceDetected(false);
+
+        // Clear match buffer when no face is detected for more than 1 second
+        const now = Date.now();
+        if (now - lastFaceDetectionTime > 1000) {
+          setMatchBuffer([]);
+        }
+
         return [];
       }
+
+      // Update face detection state and timestamp
+      setIsFaceDetected(true);
+      setLastFaceDetectionTime(Date.now());
 
       // Resize detections to match display size
       const resizedDetections = faceapi.resizeResults(detections, displaySize);
@@ -465,34 +429,123 @@ const GuardianVision: React.FC = () => {
       // Process each detected face
       resizedDetections.forEach(detection => {
         // Match face against stored encodings
-        const { isMatch, confidence } = matchFace(detection.descriptor);
-        console.log(`Face match result: isMatch=${isMatch}, confidence=${confidence.toFixed(2)}%`);
+        const matchResult = matchFace(detection.descriptor);
+        const { isMatch, confidence, verificationLevel } = matchResult;
+        console.log(`Face match result: isMatch=${isMatch}, confidence=${confidence.toFixed(2)}%, verification=${verificationLevel || 'none'}`);
+
+        // Apply temporal smoothing to reduce flickering between match/no match states
+        // Add current match result to buffer
+        setMatchBuffer(prev => {
+          const newBuffer = [...prev, { isMatch, confidence, verificationLevel: verificationLevel || 'none' }];
+          // Keep only the most recent frames
+          return newBuffer.slice(-matchBufferSize);
+        });
+
+        // Calculate smoothed match result based on buffer
+        let smoothedIsMatch = isMatch;
+        let smoothedConfidence = confidence;
+        let smoothedVerificationLevel = verificationLevel;
+
+        // Only apply smoothing if we have enough frames in the buffer
+        if (matchBuffer.length >= 5) {
+          // Count matches in the buffer
+          const matchCount = matchBuffer.filter(m => m.isMatch).length;
+
+          // Calculate match ratio
+          const matchRatio = matchCount / matchBuffer.length;
+
+          // Only change state if we have a strong consensus
+          if (isMatch && matchRatio < (1 - matchConsistencyThreshold)) {
+            // Current frame says match but history disagrees strongly
+            smoothedIsMatch = false;
+          } else if (!isMatch && matchRatio > matchConsistencyThreshold) {
+            // Current frame says no match but history disagrees strongly
+            smoothedIsMatch = true;
+
+            // Use the average confidence of the matching frames
+            const matchingFrames = matchBuffer.filter(m => m.isMatch);
+            if (matchingFrames.length > 0) {
+              smoothedConfidence = matchingFrames.reduce((sum, m) => sum + m.confidence, 0) / matchingFrames.length;
+
+              // Use the most common verification level
+              // Count occurrences of each verification level
+              const highCount = matchingFrames.filter(m => m.verificationLevel === 'high').length;
+              const mediumCount = matchingFrames.filter(m => m.verificationLevel === 'medium').length;
+              const lowCount = matchingFrames.filter(m => m.verificationLevel === 'low').length;
+              const noneCount = matchingFrames.filter(m => m.verificationLevel === 'none').length;
+
+              // Find the most common level
+              let mostCommonLevel = verificationLevel;
+              let maxCount = 0;
+
+              if (highCount > maxCount) {
+                maxCount = highCount;
+                mostCommonLevel = 'high';
+              }
+
+              if (mediumCount > maxCount) {
+                maxCount = mediumCount;
+                mostCommonLevel = 'medium';
+              }
+
+              if (lowCount > maxCount) {
+                maxCount = lowCount;
+                mostCommonLevel = 'low';
+              }
+
+              if (noneCount > maxCount) {
+                maxCount = noneCount;
+                mostCommonLevel = 'none';
+              }
+
+              smoothedVerificationLevel = mostCommonLevel;
+            }
+          }
+
+          console.log(`Smoothed match result: isMatch=${smoothedIsMatch}, confidence=${smoothedConfidence.toFixed(2)}%, verification=${smoothedVerificationLevel || 'none'} (buffer ratio: ${matchRatio.toFixed(2)})`);
+        }
 
         // Record match if found and geolocation is enabled
-        if (isMatch && currentLocation) {
+        // Use smoothed results if available, otherwise use raw results
+        const finalIsMatch = matchBuffer.length >= 5 ? smoothedIsMatch : isMatch;
+        const finalConfidence = matchBuffer.length >= 5 ? smoothedConfidence : confidence;
+        const finalVerificationLevel = matchBuffer.length >= 5 ? smoothedVerificationLevel : verificationLevel;
+
+        if (finalIsMatch && currentLocation) {
           const newMatch: FaceMatch = {
             label: 'Match',
-            distance: 1 - (confidence / 100),
+            distance: 1 - (finalConfidence / 100),
             timestamp: new Date(),
             location: currentLocation,
-            confidence
+            confidence: finalConfidence,
+            verificationLevel: finalVerificationLevel,
+            individualMatches: matchResult.individualMatches,
+            totalDescriptors: matchResult.totalDescriptors,
+            distanceRatio: matchResult.distanceRatio
           };
           handleMatch(newMatch);
         }
 
         // Draw box around face with match information
+        // Use smoothed results if available, otherwise use raw results
         const drawBox = new faceapi.draw.DrawBox(detection.detection.box, {
-          label: isMatch
-            ? showConfidence ? `Match: ${confidence.toFixed(2)}%` : 'Match'
+          label: finalIsMatch
+            ? showConfidence
+              ? `Match: ${finalConfidence.toFixed(2)}% (${finalVerificationLevel?.toUpperCase() || 'NONE'})${matchResult.individualMatches ? ` [${matchResult.individualMatches}/${matchResult.totalDescriptors}]` : ''}`
+              : `Match (${finalVerificationLevel?.toUpperCase() || 'NONE'})`
             : 'No Match',
-          boxColor: isMatch ? '#00ff00' : '#ff0000',
-          lineWidth: 2
+          boxColor: finalIsMatch
+            ? finalVerificationLevel === 'high' ? '#00ff00' // Bright green for high verification
+            : finalVerificationLevel === 'medium' ? '#88cc00' // Yellow-green for medium verification
+            : '#ffcc00' // Yellow for low verification
+            : '#ff0000', // Red for no match
+          lineWidth: finalIsMatch && finalVerificationLevel === 'high' ? 3 : 2 // Thicker line for high verification
         });
 
         drawBox.draw(canvas);
 
         // Apply privacy blur if needed
-        if (privacyMode && !isMatch) {
+        if (privacyMode && !finalIsMatch) {
           const box = detection.detection.box;
           ctx.filter = 'blur(10px)';
           ctx.drawImage(
@@ -506,8 +559,8 @@ const GuardianVision: React.FC = () => {
           const landmarks = detection.landmarks;
 
           // Set styles based on match status
-          const color = isMatch ? '#00ff00' : '#ff0000';
-          const glowColor = isMatch ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+          const color = finalIsMatch ? '#00ff00' : '#ff0000';
+          const glowColor = finalIsMatch ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
 
           // Draw the facial landmark lines first (underneath)
           ctx.beginPath();
@@ -552,11 +605,15 @@ const GuardianVision: React.FC = () => {
           descriptor: detection.descriptor,
           detection: detection.detection,
           landmarks: detection.landmarks,
-          match: isMatch ? {
+          match: finalIsMatch ? {
             label: 'Match',
-            distance: 1 - (confidence / 100),
+            distance: 1 - (finalConfidence / 100),
             timestamp: new Date(),
-            confidence
+            confidence: finalConfidence,
+            verificationLevel: finalVerificationLevel,
+            individualMatches: matchResult.individualMatches,
+            totalDescriptors: matchResult.totalDescriptors,
+            distanceRatio: matchResult.distanceRatio
           } : undefined
         };
 
@@ -916,6 +973,12 @@ const GuardianVision: React.FC = () => {
     // Add new files to the existing array
     const combinedFiles = [...currentPendingImages, ...fileArray];
 
+    // Check if we're exceeding the maximum allowed images
+    if (combinedFiles.length > maxAllowedImages) {
+      // Show warning toast
+      addToast(`Maximum ${maxAllowedImages} reference images allowed. Only the first ${maxAllowedImages} will be used.`, 'warning');
+    }
+
     // Limit to maxAllowedImages if needed
     const finalFiles = combinedFiles.slice(0, maxAllowedImages);
     setPendingImages(finalFiles);
@@ -998,12 +1061,56 @@ const GuardianVision: React.FC = () => {
 
         // Create a face matcher with all descriptors
         if (allDescriptors.length > 0) {
-          const labeledDescriptors = new faceapi.LabeledFaceDescriptors('User', allDescriptors);
-          const faceMatcher = new faceapi.FaceMatcher([labeledDescriptors], matchThreshold);
+          // Convert descriptors to format needed for clustering
+          const descriptorsWithMetadata: FaceDescriptorWithMetadata[] = allEncodings.map((encoding, index) => {
+            // Extract image index from label (e.g., "Image_1_original" -> 1)
+            const imageIndex = parseInt(encoding.label.split('_')[1]) || 0;
+            return {
+              descriptor: encoding.descriptor,
+              imageIndex,
+              faceIndex: index,
+              label: encoding.label
+            };
+          });
+
+          // Analyze reference images to detect if they contain different people
+          const analysisResult = analyzeReferenceImages(descriptorsWithMetadata);
+          setFaceClusters(analysisResult.clusters);
+
+          // If mixed identities detected, set the warning flag but don't show toast
+          // Data augmentation can cause confusion for clustering algorithms
+          if (analysisResult.hasMixedIdentities && !identityWarningShown) {
+            setIdentityWarningShown(true);
+
+            // Log the information for debugging purposes only
+            const totalFaces = descriptorsWithMetadata.length;
+            const dominantClusterSize = analysisResult.dominantCluster?.members.length || 0;
+            const outlierCount = analysisResult.outliers.length;
+            const dominantPercentage = Math.round((dominantClusterSize / totalFaces) * 100);
+
+            console.warn(`Detected ${analysisResult.clusters.length} different identities in reference images`);
+            console.warn(`Dominant identity: ${dominantClusterSize} faces (${dominantPercentage}%)`);
+            console.warn(`Outliers: ${outlierCount} faces`);
+          }
+
+          // Create face matcher based on clusters if we have mixed identities,
+          // otherwise use all descriptors
+          let faceMatcher;
+          if (analysisResult.hasMixedIdentities && analysisResult.dominantCluster) {
+            // Use only the dominant cluster for matching
+            const dominantDescriptors = analysisResult.dominantCluster.members.map(m => m.descriptor);
+            const labeledDescriptors = new faceapi.LabeledFaceDescriptors('User', dominantDescriptors);
+            faceMatcher = new faceapi.FaceMatcher([labeledDescriptors], matchThreshold);
+            console.log(`Created face matcher with ${dominantDescriptors.length} descriptors from dominant identity`);
+          } else {
+            // Use all descriptors if no mixed identities detected
+            const labeledDescriptors = new faceapi.LabeledFaceDescriptors('User', allDescriptors);
+            faceMatcher = new faceapi.FaceMatcher([labeledDescriptors], matchThreshold);
+            console.log(`Created face matcher with ${allDescriptors.length} descriptors`);
+          }
+
           setFaceMatcher(faceMatcher);
           setFaceEncodings(allEncodings);
-
-          console.log(`Created face matcher with ${allDescriptors.length} descriptors`);
           setSelectedSource('upload');
         } else {
           // Show a helpful error message if no faces were detected
@@ -1043,12 +1150,12 @@ const GuardianVision: React.FC = () => {
     });
   };
 
-  // Process a single reference image
+  // Process a single reference image with data augmentation
   const processReferenceImage = async (img: HTMLImageElement, index: number): Promise<{ success: boolean; encodings: FaceEncoding[]; descriptors: Float32Array[] }> => {
     try {
       console.log(`Processing reference image ${index + 1}`);
 
-          // Use SSD MobileNet with optimized parameters for face detection
+      // Use SSD MobileNet with optimized parameters for face detection
       // We've removed the Performance Mode option as accuracy is critical for missing person detection
       const detectionOptions = new faceapi.SsdMobilenetv1Options({
         // Use a low confidence threshold to detect more challenging faces
@@ -1058,30 +1165,88 @@ const GuardianVision: React.FC = () => {
       });
       console.log(`Using optimized SSD MobileNet for face detection on image ${index + 1}`);
 
-      const detections = await faceapi.detectAllFaces(img, detectionOptions)
+      // Create augmented versions of the image if data augmentation is enabled
+      let augmentedImages: HTMLCanvasElement[] = [];
+      if (dataAugmentation) {
+        console.log(`%cCreating augmented versions of reference image ${index + 1}`, 'color: #4CAF50; font-weight: bold');
+        augmentedImages = createAugmentedImages(img);
+        console.log(`%cCreated ${augmentedImages.length} augmented versions of reference image ${index + 1}`, 'color: #4CAF50; font-weight: bold');
+        console.log('Augmentation types: rotations, brightness variations, contrast adjustments, flips, and combinations');
+      } else {
+        console.log(`%cData augmentation disabled for reference image ${index + 1}`, 'color: #FF5722; font-weight: bold');
+        console.log('Enable data augmentation in Settings > Advanced Settings for better face recognition');
+      }
+
+      // Process original image first
+      const originalDetections = await faceapi.detectAllFaces(img, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptors();
 
-      if (detections.length === 0) {
-        console.warn(`No faces detected in reference image ${index + 1}`);
+      if (originalDetections.length === 0) {
+        console.warn(`No faces detected in original reference image ${index + 1}`);
+        // Try with augmented images before giving up
+      }
+
+      // Collect all descriptors from original and augmented images
+      const allEncodings: FaceEncoding[] = [];
+      const allDescriptors: Float32Array[] = [];
+
+      // Add original detections
+      if (originalDetections.length > 0) {
+        // Use the first face detected in the original image
+        const detection = originalDetections[0];
+        allEncodings.push({
+          descriptor: detection.descriptor,
+          label: `Image_${index + 1}_original`
+        });
+        allDescriptors.push(detection.descriptor);
+      }
+
+      // Process each augmented image
+      let augmentedCount = 0;
+      for (let i = 0; i < augmentedImages.length; i++) {
+        try {
+          const augmentedImg = augmentedImages[i];
+          const augmentedDetections = await faceapi.detectAllFaces(augmentedImg, detectionOptions)
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+
+          if (augmentedDetections.length > 0) {
+            // Use the first face detected in each augmented image
+            const detection = augmentedDetections[0];
+            allEncodings.push({
+              descriptor: detection.descriptor,
+              label: `Image_${index + 1}_aug_${i + 1}`
+            });
+            allDescriptors.push(detection.descriptor);
+            augmentedCount++;
+          }
+        } catch (augError) {
+          console.warn(`Error processing augmented image ${i + 1} for reference image ${index + 1}:`, augError);
+          // Continue with other augmented images
+        }
+      }
+
+      if (dataAugmentation) {
+        console.log(`%cSuccessfully processed ${augmentedCount} augmented versions of reference image ${index + 1}`, 'color: #4CAF50; font-weight: bold');
+        console.log(`%cTotal descriptors for reference image ${index + 1}: ${allDescriptors.length}`, 'color: #4CAF50; font-weight: bold');
+        const originalCount = originalDetections.length || 1;
+        const totalCount = allDescriptors.length;
+        const additionalSamples = totalCount - originalCount;
+        console.log(`%cData augmentation added ${additionalSamples} additional samples (${totalCount} total from ${originalCount} original)`, 'color: #2196F3; font-weight: bold');
+      } else {
+        console.log(`Total descriptors for reference image ${index + 1}: ${allDescriptors.length}`);
+      }
+
+      if (allDescriptors.length === 0) {
+        console.warn(`No faces detected in any version of reference image ${index + 1}`);
         return { success: false, encodings: [], descriptors: [] };
       }
 
-      console.log(`Detected ${detections.length} faces in reference image ${index + 1}`);
-
-      // Create encodings for this image
-      const encodings = detections.map((detection, i) => ({
-        descriptor: detection.descriptor,
-        label: `Image_${index + 1}_${i + 1}`
-      }));
-
-      // Extract descriptors
-      const descriptors = detections.map(detection => detection.descriptor);
-
       return {
         success: true,
-        encodings,
-        descriptors
+        encodings: allEncodings,
+        descriptors: allDescriptors
       };
     } catch (error) {
       console.error(`Error processing reference image ${index + 1}:`, error);
@@ -1504,6 +1669,39 @@ const GuardianVision: React.FC = () => {
                       {showConfidence ? face.match.distance.toFixed(4) : 'Positive Match'}
                     </span>
                   </div>
+                  <div className="metric-row">
+                    <span className="metric-label">Verification Level:</span>
+                    <span className={`metric-value verification-${face.match.verificationLevel || 'none'}`}>
+                      {face.match.verificationLevel ? face.match.verificationLevel.toUpperCase() : 'NONE'}
+                    </span>
+                  </div>
+
+                  {/* Add individual match information if available */}
+                  {face.match.individualMatches !== undefined && face.match.totalDescriptors !== undefined && (
+                    <div className="metric-row">
+                      <span className="metric-label">Individual Matches:</span>
+                      <span className="metric-value">
+                        {face.match.individualMatches}/{face.match.totalDescriptors}
+                        ({((face.match.individualMatches / face.match.totalDescriptors) * 100).toFixed(1)}%)
+
+                        {/* Add match quality indicator */}
+                        {(() => {
+                          const matchRatio = face.match.totalDescriptors > 0 ?
+                            (face.match.individualMatches / face.match.totalDescriptors) : 0;
+
+                          if (matchRatio >= 0.6) {
+                            return <span className="match-quality match-quality-excellent">EXCELLENT</span>;
+                          } else if (matchRatio >= 0.4) {
+                            return <span className="match-quality match-quality-good">GOOD</span>;
+                          } else if (matchRatio >= 0.2) {
+                            return <span className="match-quality match-quality-fair">FAIR</span>;
+                          } else {
+                            return <span className="match-quality match-quality-poor">POOR</span>;
+                          }
+                        })()}
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -2190,6 +2388,9 @@ const GuardianVision: React.FC = () => {
           // Performance Mode option removed - accuracy is critical for missing person detection
           performanceMode={false}
           setPerformanceMode={() => {/* No-op */}}
+          // Data augmentation for improved face recognition
+          dataAugmentation={dataAugmentation}
+          setDataAugmentation={setDataAugmentation}
           onOpenDashboard={() => setShowDashboard(true)}
         />
 
@@ -2199,12 +2400,6 @@ const GuardianVision: React.FC = () => {
             onClick={() => setShowTutorial(true)}
           >
             Tutorial
-          </button>
-          <button
-            className="action-button"
-            onClick={() => setShowDashboard(true)}
-          >
-            Dashboard
           </button>
           <button
             className="action-button"
@@ -2226,10 +2421,15 @@ const GuardianVision: React.FC = () => {
                 key={option.id}
                 className={`source-option ${selectedSource === option.id ? 'selected' : ''}`}
                 onClick={() => {
-                  handleSourceOptionClick(option.id);
-                  // If there are pending images, show them
-                  if (option.id === 'image' && pendingImages.length > 0) {
-                    setImagesReadyToProcess(true);
+                  // Toggle the selected source - if already selected, deselect it
+                  if (selectedSource === option.id) {
+                    setSelectedSource(null);
+                  } else {
+                    handleSourceOptionClick(option.id);
+                    // If there are pending images, show them
+                    if (option.id === 'image' && pendingImages.length > 0) {
+                      setImagesReadyToProcess(true);
+                    }
                   }
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -2242,7 +2442,39 @@ const GuardianVision: React.FC = () => {
           </div>
 
           {selectedSource === 'image' && (
-            <div className="upload-container">
+            <div
+              className="upload-container"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.add('dragging');
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('dragging');
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('dragging');
+
+                // Handle dropped files
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  // Create a synthetic event object with the files
+                  const syntheticEvent = {
+                    target: {
+                      files: e.dataTransfer.files,
+                      value: ''
+                    }
+                  } as React.ChangeEvent<HTMLInputElement>;
+
+                  // Process the files using the existing handler
+                  handleSourceUpload(syntheticEvent);
+                  setSelectedSource(null);
+                }
+              }}
+            >
               <label className="file-input-label">
                 <input
                   type="file"
@@ -2251,9 +2483,11 @@ const GuardianVision: React.FC = () => {
                   onChange={(e) => {
                     handleSourceUpload(e);
                     e.target.value = '';
-                    setSelectedSource(null);
+                    // Don't automatically close the upload dialog
+                    // This allows users to add more files if needed
                   }}
                   className="file-input"
+                  id="guardian-file-input"
                 />
                 <span>
                   {pendingImages.length > 0
@@ -2262,6 +2496,69 @@ const GuardianVision: React.FC = () => {
                   }
                 </span>
               </label>
+
+              {/* Preview container for uploaded images */}
+              {pendingImages.length > 0 && (
+                <div className="preview-thumbnails">
+                  {pendingImages.slice(0, 1).map((file, index) => (
+                    <div key={index} className="preview-container">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index + 1}`}
+                        className="preview-image"
+                      />
+                      {pendingImages.length > 1 && (
+                        <div className="reference-count" title="Hover to see all images">
+                          +{pendingImages.length - 1} more images
+                          <div className="image-hover-preview">
+                            <h3 className="preview-title">Pending Images</h3>
+                            {pendingImages.map((file, idx) => (
+                              idx > 0 && (
+                                <div key={idx} className="preview-thumbnail">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`Preview ${idx + 1}`}
+                                  />
+                                  <span>Image {idx + 1}</span>
+                                  <button
+                                    className="remove-thumbnail"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Remove this specific image
+                                      const newPendingImages = [...pendingImages];
+                                      newPendingImages.splice(idx, 1);
+                                      setPendingImages(newPendingImages);
+
+                                      // Update reference images count
+                                      setReferenceImagesCount(newPendingImages.length);
+
+                                      // If no images left, reset everything
+                                      if (newPendingImages.length === 0) {
+                                        setImagesReadyToProcess(false);
+                                      }
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        className="remove-image"
+                        onClick={() => {
+                          setPendingImages([]);
+                          setImagesReadyToProcess(false);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Process button - only shown when images are ready to process */}
               {imagesReadyToProcess && (
@@ -2286,10 +2583,41 @@ const GuardianVision: React.FC = () => {
                       <div className="image-hover-preview">
                         <h3 className="preview-title">Reference Images</h3>
                         {sourceImages.map((img, index) => (
-                          <div key={index} className="preview-thumbnail">
-                            <img src={img} alt={`Reference ${index + 1}`} />
-                            <span>Image {index + 1}</span>
-                          </div>
+                          index > 0 && ( /* Skip the first image (Image_1) */
+                            <div key={index} className="preview-thumbnail">
+                              <img src={img} alt={`Reference ${index + 1}`} />
+                              <span>Image {index + 1}</span>
+                              <button
+                                className="remove-thumbnail"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent closing the hover preview
+                                  // Remove this specific image
+                                  const newSourceImages = [...sourceImages];
+                                  newSourceImages.splice(index, 1);
+
+                                  // Update state
+                                  if (newSourceImages.length > 0) {
+                                    setSourceImages(newSourceImages);
+                                    setReferenceImagesCount(newSourceImages.length);
+                                    // If we're removing the primary image, set the new first image as primary
+                                    if (index === 0) {
+                                      setSourceImage(newSourceImages[0]);
+                                    }
+                                  } else {
+                                    // If no images left, reset everything
+                                    setSourceImage(null);
+                                    setSourceImages([]);
+                                    setFaceEncodings([]);
+                                    setReferenceImagesCount(0);
+                                    setImagesReadyToProcess(false);
+                                    setPendingImages([]);
+                                  }
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )
                         ))}
                       </div>
                     </div>
@@ -2333,10 +2661,41 @@ const GuardianVision: React.FC = () => {
                     <div className="image-hover-preview">
                       <h3 className="preview-title">Reference Images</h3>
                       {sourceImages.map((img, index) => (
-                        <div key={index} className="preview-thumbnail">
-                          <img src={img} alt={`Reference ${index + 1}`} />
-                          <span>Image {index + 1}</span>
-                        </div>
+                        index > 0 && ( /* Skip the first image (Image_1) */
+                          <div key={index} className="preview-thumbnail">
+                            <img src={img} alt={`Reference ${index + 1}`} />
+                            <span>Image {index + 1}</span>
+                            <button
+                              className="remove-thumbnail"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent closing the hover preview
+                                // Remove this specific image
+                                const newSourceImages = [...sourceImages];
+                                newSourceImages.splice(index, 1);
+
+                                // Update state
+                                if (newSourceImages.length > 0) {
+                                  setSourceImages(newSourceImages);
+                                  setReferenceImagesCount(newSourceImages.length);
+                                  // If we're removing the primary image, set the new first image as primary
+                                  if (index === 0) {
+                                    setSourceImage(newSourceImages[0]);
+                                  }
+                                } else {
+                                  // If no images left, reset everything
+                                  setSourceImage(null);
+                                  setSourceImages([]);
+                                  setFaceEncodings([]);
+                                  setReferenceImagesCount(0);
+                                  setImagesReadyToProcess(false);
+                                  setPendingImages([]);
+                                }
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )
                       ))}
                     </div>
                   </div>
@@ -2376,6 +2735,17 @@ const GuardianVision: React.FC = () => {
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                   </svg>
                   <span>Using fewer than {minRecommendedImages} reference images may reduce recognition accuracy.</span>
+                </div>
+              )}
+
+              {identityWarningShown && (
+                <div className="identity-warning">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ff5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <span>Your reference images may contain different people. For best results, use images of the same person.</span>
                 </div>
               )}
 
@@ -2484,20 +2854,6 @@ const GuardianVision: React.FC = () => {
         <button
           className="landmarks-toggle-button"
           onClick={() => setShowVideoFeed(!showVideoFeed)}
-          style={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
-            zIndex: 2000,
-            background: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '4px',
-            padding: '5px 10px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}
         >
           {showVideoFeed ? 'Show Landmarks' : 'Hide Landmarks'}
         </button>
@@ -2536,10 +2892,16 @@ const GuardianVision: React.FC = () => {
         />
 
         {/* Match results debug panel */}
-        {matchResults && (
-          <div className={`match-results-debug ${matchResults.includes('NO MATCH') ? 'no-match' : 'match'}`}>
+        {enhancedMatching.matchResults && (
+          <div className={`match-results-debug ${!isFaceDetected ? 'no-face' : enhancedMatching.matchResults.includes('NO MATCH') ? 'no-match' : 'match'}`}>
             <div className="debug-panel-header">
-              <h4>{matchResults.includes('NO MATCH') ? 'Detection Analysis' : 'Match Analysis'}</h4>
+              <h4>
+                {!isFaceDetected
+                  ? 'No Face Detected'
+                  : enhancedMatching.matchResults.includes('NO MATCH')
+                    ? 'Enhanced Detection Analysis'
+                    : 'Enhanced Match Analysis'}
+              </h4>
               <button
                 className="debug-panel-toggle"
                 onClick={() => setIsDebugPanelExpanded(!isDebugPanelExpanded)}
@@ -2548,26 +2910,65 @@ const GuardianVision: React.FC = () => {
                 {isDebugPanelExpanded ? "−" : "+"}
               </button>
             </div>
-            <pre className={isDebugPanelExpanded ? "expanded" : "collapsed"}>{matchResults}</pre>
+            <pre className={isDebugPanelExpanded ? "expanded" : "collapsed"}>
+              {!isFaceDetected
+                ? "No face detected in the current frame. Please position your face in the camera view."
+                : enhancedMatching.matchResults}
+            </pre>
           </div>
         )}
-        {processedFaces.length > 0 && (
-          <div className={`face-match-label ${processedFaces[processedFaces.length - 1].match ? 'match' : 'no-match'}`}>
-            {processedFaces[processedFaces.length - 1].match ? (
+        {/* Face detection status label */}
+        <div className={`face-match-label ${!isFaceDetected ? 'no-face' : processedFaces.length > 0 && processedFaces[processedFaces.length - 1].match ? 'match' : 'no-match'}`}>
+          {!isFaceDetected ? (
+            <>No Face Detected</>
+          ) : processedFaces.length > 0 ? (
               showConfidence ? (
                 <>Match Found: {
                   isNaN(((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100))
                     ? '0.00'
                     : ((1 - processedFaces[processedFaces.length - 1].match?.distance!) * 100).toFixed(2)
-                }%</>
+                }%
+                {processedFaces[processedFaces.length - 1].match?.verificationLevel && (
+                  <span className={`verification-${processedFaces[processedFaces.length - 1].match?.verificationLevel}`}>
+                    [{processedFaces[processedFaces.length - 1].match?.verificationLevel?.toUpperCase() || 'NONE'}]
+                  </span>
+                )}
+
+                {/* Add match quality indicator if available */}
+                {processedFaces[processedFaces.length - 1].match?.individualMatches !== undefined &&
+                 processedFaces[processedFaces.length - 1].match?.totalDescriptors !== undefined && (
+                  <span>
+                    {(() => {
+                      const face = processedFaces[processedFaces.length - 1];
+                      const matchRatio = face.match?.totalDescriptors! > 0 ?
+                        (face.match?.individualMatches! / face.match?.totalDescriptors!) : 0;
+
+                      if (matchRatio >= 0.6) {
+                        return <span className="match-quality match-quality-excellent">EXCELLENT</span>;
+                      } else if (matchRatio >= 0.4) {
+                        return <span className="match-quality match-quality-good">GOOD</span>;
+                      } else if (matchRatio >= 0.2) {
+                        return <span className="match-quality match-quality-fair">FAIR</span>;
+                      } else {
+                        return <span className="match-quality match-quality-poor">POOR</span>;
+                      }
+                    })()}
+                  </span>
+                )}
+                </>
               ) : (
-                <>Match Found</>
+                <>Match Found
+                {processedFaces[processedFaces.length - 1].match?.verificationLevel && (
+                  <span className={`verification-${processedFaces[processedFaces.length - 1].match?.verificationLevel}`}>
+                    [{processedFaces[processedFaces.length - 1].match?.verificationLevel?.toUpperCase() || 'NONE'}]
+                  </span>
+                )}
+                </>
               )
             ) : (
               <>No Match Found</>
             )}
           </div>
-        )}
       </div>
 
       {renderProcessedFaces()}

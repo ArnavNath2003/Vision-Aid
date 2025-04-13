@@ -284,6 +284,57 @@
   color: #ff6b6b;
 }
 
+/* Verification level styles */
+.verification-high {
+  color: #4caf50; /* Green */
+  font-weight: bold;
+}
+
+.verification-medium {
+  color: #ff9800; /* Orange */
+  font-weight: bold;
+}
+
+.verification-low {
+  color: #ff5722; /* Deep Orange */
+  font-weight: bold;
+}
+
+.verification-none {
+  color: #9e9e9e; /* Gray */
+  font-style: italic;
+}
+
+/* Match quality indicator */
+.match-quality {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.match-quality-excellent {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.match-quality-good {
+  background-color: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+}
+
+.match-quality-fair {
+  background-color: rgba(255, 87, 34, 0.2);
+  color: #ff5722;
+}
+
+.match-quality-poor {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
 /* Add gradient animation */
 @keyframes gradientFlow {
   0% {
@@ -714,15 +765,51 @@
 
 .guardian-vision-container .upload-container {
   margin-top: 2rem;
+  position: relative;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
 }
 
+/* Drag and drop styling */
+.guardian-vision-container .upload-container.dragging {
+  background: rgba(102, 204, 255, 0.15);
+  border: 2px dashed rgba(102, 204, 255, 0.5);
+  box-shadow: 0 0 15px rgba(102, 204, 255, 0.2);
+}
+
+
+
 .file-input-label {
-  display: block;
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
   border-radius: 8px;
   border: 2px dashed rgba(255, 255, 255, 0.2);
   cursor: pointer;
   text-align: center;
+  transition: all 0.3s ease;
+  min-height: 120px;
+}
+
+.file-input-label::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='17 8 12 3 7 8'%3E%3C/polyline%3E%3Cline x1='12' y1='3' x2='12' y2='15'%3E%3C/line%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.guardian-vision-container.light-mode .file-input-label::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='17 8 12 3 7 8'%3E%3C/polyline%3E%3Cline x1='12' y1='3' x2='12' y2='15'%3E%3C/line%3E%3C/svg%3E");
 }
 
 .file-input-label:hover {
@@ -730,8 +817,23 @@
   background: rgba(102, 204, 255, 0.1);
 }
 
+.file-input-label:hover::before {
+  opacity: 1;
+  transform: translateY(-5px);
+}
+
 .file-input {
   display: none;
+}
+
+.upload-container.dragging .file-input-label {
+  border-color: rgba(102, 204, 255, 0.5);
+  background: rgba(102, 204, 255, 0.1);
+}
+
+.upload-container.dragging .file-input-label::before {
+  opacity: 1;
+  transform: translateY(-5px);
 }
 
 .guardian-vision-container .preview-container {
@@ -741,6 +843,14 @@
   height: 150px;    /* Added fixed height */
   border-radius: 8px;
   overflow: visible;  /* Changed to visible to allow hover preview to show outside */
+}
+
+.preview-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
 }
 
 .guardian-vision-container .preview-image {
@@ -814,14 +924,18 @@
 
 .guardian-vision-container .webcam-container {
   position: relative;
-  width: 640px;
-  height: 480px;
+  width: 100%;
+  max-width: 560px; /* Reduced from 640px for better fit on laptops */
+  height: 0;
+  padding-bottom: 52%; /* Further reduced from 65% to reduce vertical stretching */
   margin: 20px auto;
   overflow: visible; /* Changed from hidden to visible */
   background: #000;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border: 2px solid #2c3e50;
+  /* Add padding to reduce black space */
+  box-sizing: border-box;
 }
 
 .webcam-container video {
@@ -830,7 +944,35 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Changed from cover for better clarity */
+  background: #000; /* Ensure black background for any empty space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Landmarks toggle button */
+.landmarks-toggle-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.landmarks-toggle-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .webcam-overlay {
@@ -846,6 +988,8 @@
   /* Remove any filters that might be affecting visibility */
   filter: none !important;
   /* Ensure it's displayed */
+  object-fit: contain !important; /* Match video object-fit */
+  background: transparent !important; /* Ensure transparent background */
   display: block !important;
   /* Prevent any transforms that might affect positioning */
   transform: none !important;
@@ -989,9 +1133,7 @@
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   position: relative;
-  height: 250px; /* Fixed height for both sections */
-  min-height: 250px; /* Ensure minimum height */
-  max-height: 250px; /* Ensure maximum height */
+  min-height: 250px; /* Changed from fixed height to min-height */
   display: flex;
   flex-direction: column;
 }
@@ -1265,6 +1407,14 @@
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(50, 0, 0, 0.8));
 }
 
+/* No face detected styling */
+.match-results-debug.no-face {
+  color: #a0a0a0; /* Gray text for no face detected */
+  border: 1px solid rgba(160, 160, 160, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(160, 160, 160, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(40, 40, 40, 0.8));
+}
+
 .match-results-debug:hover {
   opacity: 1;
   transform: scale(1.02);
@@ -1290,6 +1440,13 @@
   color: #ffffff;
   border: 2px solid rgba(255, 0, 0, 0.3);
   box-shadow: 0 4px 16px rgba(255, 0, 0, 0.3);
+}
+
+.face-match-label.no-face {
+  background: linear-gradient(135deg, rgba(80, 80, 80, 0.8), rgba(40, 40, 40, 0.8));
+  color: #ffffff;
+  border: 2px solid rgba(150, 150, 150, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .guardian-vision-container .processing-overlay {
@@ -2601,6 +2758,29 @@
   flex-shrink: 0;
 }
 
+.identity-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 12px 15px;
+  background: rgba(255, 87, 34, 0.1);
+  border-left: 3px solid rgba(255, 87, 34, 0.6);
+  border-radius: 0 8px 8px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.light-mode .identity-warning {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 87, 34, 0.05);
+}
+
+.identity-warning svg {
+  color: rgba(255, 87, 34, 0.9);
+  flex-shrink: 0;
+}
+
 .reference-count {
   position: absolute;
   bottom: 10px;
@@ -2697,6 +2877,40 @@
 .preview-thumbnail:hover img {
   border-color: rgba(255, 255, 255, 0.8);
   transform: scale(1.05);
+}
+
+/* Remove button for thumbnail images */
+.remove-thumbnail {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 0, 0, 0.6);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 60;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease;
+}
+
+.preview-thumbnail {
+  position: relative; /* For positioning the remove button */
+}
+
+.preview-thumbnail:hover .remove-thumbnail {
+  opacity: 1; /* Show on hover */
+}
+
+.remove-thumbnail:hover {
+  background: rgba(255, 0, 0, 0.9);
+  transform: scale(1.1);
 }
 
 .preview-thumbnail span {
@@ -2988,6 +3202,135 @@
     max-width: 200px;
     font-size: 0.8rem;
     padding: 8px;
+  }
+
+  /* Adjust debug stats panel positioning on mobile */
+  .debug-stats {
+    max-width: 200px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* When location is enabled, position debug stats above location indicator */
+  .location-indicator.active ~ .debug-stats {
+    bottom: 80px !important;
+    right: 10px !important;
+  }
+
+  /* Improved mobile layout for search and testing container */
+  .search-and-testing-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .search-and-testing-container > div {
+    width: 100%;
+  }
+
+  /* Adjust webcam container for mobile */
+  .guardian-vision-container .webcam-container {
+    margin: 10px auto;
+  }
+
+  /* Make buttons more mobile-friendly */
+  .webcam-button {
+    padding: 10px 16px;
+    min-width: 120px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust preview containers for mobile */
+  .preview-container {
+    max-width: 120px;
+    height: 120px;
+  }
+}
+
+/* Additional Responsive Breakpoints */
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .guardian-vision-container .guardian-header {
+    padding: 1.5rem 2rem;
+  }
+
+  .guardian-vision-container .guardian-content {
+    padding: 1rem;
+    margin-top: 100px;
+  }
+
+  .webcam-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .webcam-button {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .preview-thumbnails {
+    justify-content: center;
+  }
+
+  .preview-thumbnail {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Medium-sized devices (tablets) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .guardian-vision-container .guardian-content {
+    padding: 1.5rem;
+  }
+
+  .guardian-vision-container .webcam-container {
+    max-width: 480px;
+    padding-bottom: 48%; /* Reduced to match the new aspect ratio */
+  }
+
+  .sink-options, .testing-options {
+    gap: 0.75rem;
+  }
+}
+
+/* Laptop screens */
+@media (min-width: 1025px) and (max-width: 1366px) {
+  .guardian-vision-container .webcam-container {
+    max-width: 520px;
+    padding-bottom: 50%; /* Reduced to match the new aspect ratio */
+  }
+
+  /* Improve clarity of webcam display */
+  .webcam-container video,
+  .webcam-container canvas {
+    object-fit: contain !important; /* Changed from cover for better clarity */
+  }
+}
+
+/* Large screens */
+@media (min-width: 1367px) and (max-width: 1440px) {
+  .guardian-vision-container .guardian-content {
+    max-width: 1100px;
+  }
+
+  .guardian-vision-container .webcam-container {
+    max-width: 540px;
+    padding-bottom: 50%; /* Adjusted to match the new aspect ratio */
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1441px) {
+  .guardian-vision-container .guardian-content {
+    max-width: 1300px;
+    padding: 2.5rem;
+  }
+
+  .guardian-vision-container .webcam-container {
+    max-width: 700px; /* Reduced from 800px */
+    padding-bottom: 48%; /* Adjusted to match the new aspect ratio */
   }
 }
 

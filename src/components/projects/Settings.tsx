@@ -23,6 +23,8 @@ interface SettingsProps {
   setFrameSkip: (value: number) => void;
   performanceMode: boolean;
   setPerformanceMode: (value: boolean) => void;
+  dataAugmentation?: boolean;
+  setDataAugmentation?: (value: boolean) => void;
 
   // Dashboard
   onOpenDashboard: () => void;
@@ -51,6 +53,8 @@ const Settings: React.FC<SettingsProps> = ({
   setFrameSkip,
   performanceMode,
   setPerformanceMode,
+  dataAugmentation = true,
+  setDataAugmentation = () => {},
   onOpenDashboard
 }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -293,6 +297,32 @@ const Settings: React.FC<SettingsProps> = ({
               </div>
 
               {/* Performance Mode option removed - accuracy is critical for missing person detection */}
+
+              <div className="setting-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={dataAugmentation}
+                    onChange={() => handleSettingChange(
+                      'dataAugmentation',
+                      setDataAugmentation,
+                      !dataAugmentation,
+                      `Data augmentation ${!dataAugmentation ? 'enabled' : 'disabled'}`
+                    )}
+                  />
+                  <span className="setting-label">
+                    <RefreshCw size={18} className="setting-icon" />
+                    Data Augmentation
+                  </span>
+                </label>
+                <span className="setting-description">
+                  Enhance recognition by creating variations of your reference images (rotation, brightness, contrast, flips).
+                  <br />
+                  <small style={{ color: '#4CAF50' }}>
+                    Recommended: Creates ~18 variations from each image, significantly improving recognition accuracy.
+                  </small>
+                </span>
+              </div>
             </div>
           )}
         </div>

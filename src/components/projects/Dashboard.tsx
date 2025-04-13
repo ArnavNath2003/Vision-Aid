@@ -70,16 +70,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
   };
 
   // Function to refresh the dashboard data
+  // We use a debounce mechanism to prevent spam clicking
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+  const refreshCooldown = 2000; // 2 seconds cooldown between refreshes
+
   const refreshDashboard = () => {
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTime;
+
+    // Check if enough time has passed since the last refresh
+    if (timeSinceLastRefresh < refreshCooldown) {
+      console.log(`Refresh on cooldown. Please wait ${Math.ceil((refreshCooldown - timeSinceLastRefresh) / 1000)} seconds.`);
+      addToast(`Please wait before refreshing again`, 'warning');
+      return; // Don't refresh if on cooldown
+    }
+
+    // If we passed the cooldown check, this is a successful refresh
     console.log('Refreshing dashboard...');
     setRefreshKey(prevKey => prevKey + 1); // Increment the key to force re-render
+    setLastRefreshTime(now); // Update the last refresh time
     addToast('Dashboard refreshed successfully', 'success'); // Blue gradient toast
   };
 
   // Function to clear history with toast notification
+  // Also uses a cooldown mechanism to prevent spam clicking
+  const [lastClearTime, setLastClearTime] = useState<number>(0);
+  const clearCooldown = 2000; // 2 seconds cooldown between clear operations
+
   const handleClearHistory = () => {
+    const now = Date.now();
+    const timeSinceLastClear = now - lastClearTime;
+
+    // Check if enough time has passed since the last clear
+    if (timeSinceLastClear < clearCooldown) {
+      console.log(`Clear on cooldown. Please wait ${Math.ceil((clearCooldown - timeSinceLastClear) / 1000)} seconds.`);
+      addToast(`Please wait before clearing again`, 'warning');
+      return; // Don't clear if on cooldown
+    }
+
     if (clearHistory) {
       clearHistory();
+      setLastClearTime(now); // Update the last clear time
       addToast('History cleared successfully', 'error'); // Light red toast
     }
   };
@@ -264,6 +295,53 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
     found: number;
   }
 
+  // Generate dynamic time labels based on actual data timestamps
+  const generateDynamicTimeLabels = (matchHistory: FaceMatch[]): string[] => {
+    if (!Array.isArray(matchHistory) || matchHistory.length === 0) {
+      // Default labels if no data
+      return ['12am', '4am', '8am', '12pm', '4pm', '8pm'];
+    }
+
+    // For day view, we want to show the actual times when data was collected
+    const timestamps: Date[] = matchHistory.map(match => {
+      return match.timestamp instanceof Date ? match.timestamp : new Date(match.timestamp);
+    }).filter(date => date instanceof Date && !isNaN(date.getTime()));
+
+    if (timestamps.length === 0) {
+      return ['12am', '4am', '8am', '12pm', '4pm', '8pm'];
+    }
+
+    // Sort timestamps chronologically
+    timestamps.sort((a, b) => a.getTime() - b.getTime());
+
+    // Get unique hours from the timestamps
+    const uniqueHours = Array.from(new Set(timestamps.map(date => date.getHours())));
+    uniqueHours.sort((a, b) => a - b);
+
+    // If we have very few unique hours, add some context hours
+    if (uniqueHours.length < 3) {
+      // Add hours before and after to provide context
+      const minHour = Math.min(...uniqueHours);
+      const maxHour = Math.max(...uniqueHours);
+
+      // Add 2 hours before and after if possible
+      if (minHour > 0) uniqueHours.unshift(minHour - 2);
+      if (minHour > 2) uniqueHours.unshift(minHour - 4);
+      if (maxHour < 22) uniqueHours.push(maxHour + 2);
+      if (maxHour < 20) uniqueHours.push(maxHour + 4);
+
+      // Sort again after adding context hours
+      uniqueHours.sort((a, b) => a - b);
+    }
+
+    // Format hours as time labels
+    return uniqueHours.map(hour => {
+      const ampm = hour >= 12 ? 'pm' : 'am';
+      const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12am
+      return `${hour12}${ampm}`;
+    });
+  };
+
   // Generate chart data based on real data
   const generateChartData = (): ChartDataItem[] => {
     const data: ChartDataItem[] = [];
@@ -273,7 +351,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
 
     switch(timeRange) {
       case 'day':
-        labels = ['12am', '4am', '8am', '12pm', '4pm', '8pm'];
+        // Use dynamic time labels based on actual data for day view
+        labels = generateDynamicTimeLabels(matchHistory);
         break;
       case 'week':
         labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -317,9 +396,40 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
         // Determine which period this match belongs to based on timeRange
         switch(timeRange) {
           case 'day':
-            // Divide the day into 6 periods of 4 hours each
-            periodIndex = Math.floor(matchDate.getHours() / 4);
-            console.log('Day period:', periodIndex, 'for hour:', matchDate.getHours());
+            // For day view, find the closest hour label
+            const matchHour = matchDate.getHours();
+            const hour12 = matchHour % 12 || 12; // Convert 0 to 12 for 12am
+            const ampm = matchHour >= 12 ? 'pm' : 'am';
+            const timeLabel = `${hour12}${ampm}`;
+
+            // Find the exact label if it exists
+            const exactLabelIndex = labels.findIndex(label => label === timeLabel);
+            if (exactLabelIndex !== -1) {
+              periodIndex = exactLabelIndex;
+              console.log(`Exact time label match: ${timeLabel} at index ${periodIndex}`);
+            } else {
+              // Find the closest time period
+              // Convert all labels to 24-hour format for comparison
+              const labelHours = labels.map(label => {
+                const isPM = label.endsWith('pm');
+                let hour = parseInt(label.replace(/[^0-9]/g, ''));
+                if (isPM && hour !== 12) hour += 12;
+                if (!isPM && hour === 12) hour = 0;
+                return hour;
+              });
+
+              // Find the closest hour
+              let closestDiff = 24;
+              labelHours.forEach((hour, index) => {
+                const diff = Math.abs(hour - matchHour);
+                if (diff < closestDiff) {
+                  closestDiff = diff;
+                  periodIndex = index;
+                }
+              });
+
+              console.log(`Closest time label for ${matchHour}:00 (${timeLabel}) is ${labels[periodIndex]} at index ${periodIndex}`);
+            }
             break;
           case 'week':
             // Get day of week (0 = Sunday, 1 = Monday, etc.)
@@ -657,7 +767,67 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
                         <div
                           key={index}
                           className="chart-column"
-                          title={`${item.label}: ${item.searches} searches, ${item.found} found`}
+                          title={`${item.label}: ${item.searches} searches, ${item.found} found${timeRange === 'day' ? ' (Click for details)' : ''}`}
+                          onClick={() => {
+                            if (timeRange === 'day' && item.searches > 0) {
+                              // Show a toast with the exact times of searches in this period
+                              const matchesInPeriod = matchHistory.filter(match => {
+                                if (!match.timestamp) return false;
+                                const matchDate = match.timestamp instanceof Date
+                                  ? match.timestamp
+                                  : new Date(match.timestamp);
+
+                                const matchHour = matchDate.getHours();
+                                const hour12 = matchHour % 12 || 12;
+                                const ampm = matchHour >= 12 ? 'pm' : 'am';
+                                const timeLabel = `${hour12}${ampm}`;
+
+                                // Check if this match belongs to this time period
+                                if (timeLabel === item.label) return true;
+
+                                // Otherwise check if it's close to this period
+                                const isPM = item.label.endsWith('pm');
+                                let labelHour = parseInt(item.label.replace(/[^0-9]/g, ''));
+                                if (isPM && labelHour !== 12) labelHour += 12;
+                                if (!isPM && labelHour === 12) labelHour = 0;
+
+                                return Math.abs(matchHour - labelHour) <= 2; // Within 2 hours
+                              });
+
+                              if (matchesInPeriod.length > 0) {
+                                // Group matches by day to only show one timestamp per day
+                                const matchesByDay = {};
+
+                                matchesInPeriod.forEach(match => {
+                                  const date = match.timestamp instanceof Date
+                                    ? match.timestamp
+                                    : new Date(match.timestamp);
+
+                                  // Use date as key (without time)
+                                  const dateKey = date.toLocaleDateString();
+
+                                  // Only store the first match for each day
+                                  if (!matchesByDay[dateKey]) {
+                                    matchesByDay[dateKey] = date;
+                                  }
+                                });
+
+                                // Format timestamps in the exact format: "3:59:36 PM"
+                                const times = Object.values(matchesByDay)
+                                  .map((date: Date) => {
+                                    // Format time as h:mm:ss AM/PM
+                                    const hours = date.getHours() % 12 || 12;
+                                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                                    const seconds = date.getSeconds().toString().padStart(2, '0');
+                                    const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+                                    return `${hours}:${minutes}:${seconds} ${ampm}`;
+                                  })
+                                  .join(', ');
+
+                                addToast(`Exact times for ${item.label}: ${times}`, 'info');
+                              }
+                            }
+                          }}
                         >
                           <div className="chart-bars">
                             <div
