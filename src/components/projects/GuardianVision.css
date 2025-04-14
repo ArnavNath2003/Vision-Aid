@@ -704,8 +704,12 @@
 
 /* Continue scoping all other styles... */
 .guardian-vision-container .source-section,
-.guardian-vision-container .sink-section {
+.guardian-vision-container .sink-section,
+.guardian-vision-container .testing-section {
   margin-bottom: 3rem;
+  min-height: 200px; /* Ensure consistent height */
+  display: flex;
+  flex-direction: column;
 }
 
 .guardian-vision-container .source-options,
@@ -1207,6 +1211,22 @@
   flex: 1;
 }
 
+/* Ensure all sink options have equal width */
+.sink-option-container {
+  display: flex;
+  justify-content: center;
+}
+
+.sink-option {
+  width: 100%;
+  min-width: 150px;
+}
+
+/* Make Live Webcam button match Start Detection button width */
+.testing-options .sink-option {
+  width: 160px; /* Match the webcam-button width */
+}
+
 /* Detection controls in testing section */
 .detection-controls {
   margin-top: auto;
@@ -1214,6 +1234,38 @@
   justify-content: center;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 0.5rem;
+  margin-bottom: 1.5rem; /* Add bottom margin to prevent touching container border */
+}
+
+/* Sink option container for positioning disconnect button */
+.sink-option-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Disconnect button */
+.disconnect-button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  background: linear-gradient(135deg, rgba(255, 99, 71, 0.8), rgba(255, 0, 0, 0.8));
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  margin: 0 5px;
+}
+
+.disconnect-button:hover {
+  background: linear-gradient(135deg, rgba(255, 99, 71, 1), rgba(255, 0, 0, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Connected indicator */
@@ -1227,6 +1279,22 @@
   border-radius: 50%;
   background-color: #4CAF50;
   box-shadow: 0 0 5px #4CAF50, 0 0 10px #4CAF50;
+  animation: pulse 1.5s infinite;
+}
+
+/* Simulated connection indicator */
+.guardian-vision-container .sink-option.simulated::after {
+  content: 'DEMO';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #2196F3;
+  color: white;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
   animation: pulse 1.5s infinite;
 }
 
@@ -1379,6 +1447,48 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Demo connection button */
+.demo-connect-button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(33, 150, 243, 0.8), rgba(3, 169, 244, 0.8)); /* Blue gradient */
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.demo-connect-button:hover {
+  background: linear-gradient(90deg, rgba(33, 150, 243, 1), rgba(3, 169, 244, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.demo-connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Add a small 'DEMO' badge to the button */
+.demo-connect-button::after {
+  content: 'DEMO';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff9800;
+  color: white;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: bold;
 }
 
 @keyframes fadeIn {
@@ -1641,8 +1751,10 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
-  margin-top: 1rem;
+  margin: 1rem auto 1.5rem auto; /* Add bottom margin to prevent touching container border */
   transition: all 0.3s ease;
+  display: block; /* Ensure it's a block element */
+  width: fit-content; /* Make it only as wide as needed */
 }
 
 .start-webcam-button:hover {
@@ -1781,7 +1893,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
-  width: 160px;
+  width: 160px; /* Fixed width for consistency */
 }
 
 .start-button {
@@ -2146,6 +2258,59 @@
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: rgba(147, 112, 219, 0.5) rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Close button (X) for tutorial */
+.tutorial-close-x {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.8), rgba(147, 112, 219, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  padding: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 15px rgba(147, 112, 219, 0.3);
+  overflow: hidden;
+}
+
+.tutorial-close-x::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.4s ease;
+}
+
+.tutorial-close-x:hover {
+  background: linear-gradient(135deg, rgba(70, 130, 180, 1), rgba(147, 112, 219, 1));
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(147, 112, 219, 0.5);
+}
+
+.tutorial-close-x:hover::before {
+  left: 100%;
+}
+
+.tutorial-close-x svg {
+  width: 16px;
+  height: 16px;
+  stroke: white;
+  stroke-width: 2.5;
+  transition: all 0.3s ease;
 }
 
 .tutorial-content::-webkit-scrollbar {
@@ -2219,11 +2384,21 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: none; /* Hide all steps by default */
+}
+
+.tutorial-step.active {
+  display: block; /* Show only active step */
+  animation: fadeInStep 0.5s ease-in-out;
+}
+
+@keyframes fadeInStep {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .tutorial-step:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
@@ -2267,7 +2442,15 @@
   font-size: 1.2rem;
 }
 
-.tutorial-close {
+/* Tutorial navigation */
+.tutorial-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.tutorial-nav-button, .tutorial-close {
   background: linear-gradient(135deg, rgba(70, 130, 180, 0.8), rgba(147, 112, 219, 0.8));
   color: white;
   border: none;
@@ -2279,12 +2462,20 @@
   letter-spacing: 0.5px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  margin-top: 20px;
   position: relative;
   overflow: hidden;
+  min-width: 120px;
+  text-align: center;
 }
 
-.tutorial-close::before {
+.tutorial-nav-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.tutorial-nav-button::before, .tutorial-close::before {
   content: '';
   position: absolute;
   top: 0;
@@ -2295,13 +2486,37 @@
   transition: all 0.4s ease;
 }
 
-.tutorial-close:hover {
-  transform: scale(1.05);
+.tutorial-nav-button:hover:not(.disabled), .tutorial-close:hover {
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(70, 130, 180, 0.4);
 }
 
-.tutorial-close:hover::before {
+.tutorial-nav-button:hover:not(.disabled)::before, .tutorial-close:hover::before {
   left: 100%;
+}
+
+/* Tutorial progress bar */
+.tutorial-progress {
+  margin: 20px 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  height: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tutorial-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(70, 130, 180, 0.8), rgba(147, 112, 219, 0.8));
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.tutorial-progress-text {
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 5px;
 }
 
 /* Dashboard Overlay */
@@ -2699,6 +2914,22 @@
 .action-button:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-button.disabled,
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+  transform: none;
+  box-shadow: none;
+}
+
+.action-button.disabled:hover,
+.action-button:disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: none;
+  box-shadow: none;
 }
 
 .light-mode .action-button {
@@ -3276,6 +3507,53 @@
   .preview-thumbnail {
     width: 80px;
     height: 80px;
+  }
+
+  /* Tutorial responsive styles */
+  .tutorial-content {
+    padding: 20px;
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .tutorial-step {
+    padding: 15px;
+  }
+
+  .tutorial-step h3 {
+    font-size: 1.1rem;
+  }
+
+  .tutorial-step p, .tutorial-step li {
+    font-size: 0.9rem;
+  }
+
+  .tutorial-navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tutorial-nav-button, .tutorial-close {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+
+  .tutorial-intro {
+    font-size: 0.95rem;
+    padding-left: 10px;
+  }
+
+  .tutorial-close-x {
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .tutorial-close-x svg {
+    width: 14px;
+    height: 14px;
   }
 }
 

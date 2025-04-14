@@ -824,7 +824,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
                                   })
                                   .join(', ');
 
-                                addToast(`Exact times for ${item.label}: ${times}`, 'info');
+                                addToast(`Exact time : ${times}`, 'info');
                               }
                             }
                           }}

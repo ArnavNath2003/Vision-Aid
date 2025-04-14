@@ -241,6 +241,11 @@ const GuardianVision: React.FC = () => {
   // State for LocalMedia component
   const [showLocalMedia, setShowLocalMedia] = useState<boolean>(false);
 
+  // State for simulated connections
+  const [simulationMode, setSimulationMode] = useState<'real' | 'demo'>('real');
+  const [cctvSimulated, setCctvSimulated] = useState<boolean>(false);
+  const [droneSimulated, setDroneSimulated] = useState<boolean>(false);
+
   // CCTV connection settings
   const [cctvSettings, setCctvSettings] = useState({
     ipAddress: '192.168.1.100',
@@ -2149,81 +2154,233 @@ const GuardianVision: React.FC = () => {
   const connectToCctv = () => {
     // Simulate connection process
     setIsProcessing(true);
-    setTimeout(() => {
-      // Randomly decide if a device is available (for demo purposes)
-      const deviceAvailable = Math.random() > 0.5;
 
-      if (deviceAvailable) {
+    // In real mode, attempt to connect to a real device
+    if (simulationMode === 'real') {
+      setTimeout(() => {
+        // In a real implementation, this would attempt to connect to the actual device
+        // For now, we'll always show that no real device is available
+
+        // Show no device available message with more helpful information
+        alert(
+          'No physical CCTV device available at ' +
+          `${cctvSettings.protocol}://${cctvSettings.ipAddress}:${cctvSettings.port}\n\n` +
+          'This is expected as this is a demo application. ' +
+          'To see a simulated CCTV feed, please use the "Demo Connection" button instead.'
+        );
+
+        setIsProcessing(false);
+      }, 2000);
+    }
+    // In demo mode, always show a simulated feed
+    else {
+      setTimeout(() => {
         setCctvConnected(true);
+        setCctvSimulated(true);
         setShowCctvSettings(false);
-        // Show success message
-        alert('Successfully connected to CCTV camera');
-      } else {
-        // Show no device available message
-        alert('No CCTV device available at the specified address. Please check your connection settings and try again.');
-      }
 
-      setIsProcessing(false);
-    }, 2000);
+        // Show success message with simulation notice
+        alert(
+          'Successfully connected to CCTV camera (SIMULATED)\n\n' +
+          'This is a simulated connection for demonstration purposes. ' +
+          'No actual CCTV camera is connected.'
+        );
+
+        setIsProcessing(false);
+      }, 2000);
+    }
   };
 
   // Connect to Drone
   const connectToDrone = () => {
     // Simulate connection process
     setIsProcessing(true);
-    setTimeout(() => {
-      // Randomly decide if a device is available (for demo purposes)
-      const deviceAvailable = Math.random() > 0.5;
 
-      if (deviceAvailable) {
+    // In real mode, attempt to connect to a real device
+    if (simulationMode === 'real') {
+      setTimeout(() => {
+        // In a real implementation, this would attempt to connect to the actual device
+        // For now, we'll always show that no real device is available
+
+        // Show no device available message with more helpful information
+        alert(
+          'No physical drone available with ID: ' + droneSettings.droneId + '\n\n' +
+          'This is expected as this is a demo application. ' +
+          'To see a simulated drone feed, please use the "Demo Connection" button instead.'
+        );
+
+        setIsProcessing(false);
+      }, 2000);
+    }
+    // In demo mode, always show a simulated feed
+    else {
+      setTimeout(() => {
         setDroneConnected(true);
+        setDroneSimulated(true);
         setShowDroneSettings(false);
-        // Show success message
-        alert('Successfully connected to drone');
-      } else {
-        // Show no device available message
-        alert('No drone available with the specified ID. Please check your connection settings and try again.');
-      }
 
-      setIsProcessing(false);
-    }, 2000);
+        // Show success message with simulation notice
+        alert(
+          'Successfully connected to drone (SIMULATED)\n\n' +
+          'This is a simulated connection for demonstration purposes. ' +
+          'No actual drone is connected.'
+        );
+
+        setIsProcessing(false);
+      }, 2000);
+    }
   };
 
   const Tutorial: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    const [currentStep, setCurrentStep] = useState<number>(0);
+    const totalSteps = 6;
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    const nextStep = () => {
+      if (currentStep < totalSteps - 1) {
+        setCurrentStep(currentStep + 1);
+      }
+    };
+
+    const prevStep = () => {
+      if (currentStep > 0) {
+        setCurrentStep(currentStep - 1);
+      }
+    };
+
+    // Handle clicks outside the tutorial content
+    const handleOverlayClick = (e: React.MouseEvent) => {
+      if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+
     return (
-      <div className="tutorial-overlay">
-        <div className="tutorial-content">
+      <div className="tutorial-overlay" onClick={handleOverlayClick}>
+        <div className="tutorial-content" ref={contentRef}>
+          <button className="tutorial-close-x" onClick={onClose} aria-label="Close tutorial">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
           <h2>How to Use Guardian Vision</h2>
           <p className="tutorial-intro">Guardian Vision helps you locate missing persons using advanced facial recognition technology. Follow these steps to get started:</p>
-          <div className="tutorial-steps">
-            <div className="tutorial-step">
-              <h3>Step 1: Upload Reference Images</h3>
-              <p>Upload 3-5 clear photos of the person you're looking for. Multiple reference images improve recognition accuracy.</p>
-            </div>
-            <div className="tutorial-step">
-              <h3>Step 2: Choose Search Method</h3>
-              <p>Select from available search sources:</p>
-              <ul>
-                <li><strong>Local Media</strong>: Upload images or videos from your device</li>
-                <li><strong>Live Webcam</strong>: Use your computer's camera for testing</li>
-                <li><strong>CCTV Cameras</strong>: Connect to surveillance networks</li>
-                <li><strong>Drone Feeds</strong>: Connect to aerial surveillance</li>
-              </ul>
-            </div>
-            <div className="tutorial-step">
-              <h3>Step 3: Test Face Recognition</h3>
-              <p>Use the "Start Detection" button to test how the face recognition model works with your reference images. This is for testing purposes only.</p>
-            </div>
-            <div className="tutorial-step">
-              <h3>Step 4: Review Results</h3>
-              <p>Matches will be highlighted with confidence scores. View match details in the processed results section.</p>
-            </div>
-            <div className="tutorial-step">
-              <h3>Step 5: Use the Dashboard</h3>
-              <p>Access the Dashboard to view analytics, recent searches, and performance metrics. Use the Refresh button to update data and Clear History to remove search records.</p>
-            </div>
+
+          <div className="tutorial-progress">
+            <div className="tutorial-progress-bar" style={{ width: `${(currentStep + 1) / totalSteps * 100}%` }}></div>
+            <div className="tutorial-progress-text">{currentStep + 1} of {totalSteps}</div>
           </div>
-          <button className="tutorial-close" onClick={onClose}>Got it!</button>
+
+          <div className="tutorial-steps">
+            {currentStep === 0 && (
+              <div className="tutorial-step active">
+                <h3>Step 1: Upload Reference Images</h3>
+                <p>Upload 3-5 clear photos of the person you're looking for. Multiple reference images improve recognition accuracy.</p>
+                <p>You can:</p>
+                <ul>
+                  <li>Click on <strong>Upload Image</strong> to select files from your device</li>
+                  <li>Use <strong>Camera</strong> to take photos directly</li>
+                  <li>Drag and drop images into the upload area</li>
+                </ul>
+                <p>After uploading, click <strong>Process Images</strong> to prepare them for recognition.</p>
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <div className="tutorial-step active">
+                <h3>Step 2: Choose Search Method</h3>
+                <p>Select from available search sources:</p>
+                <ul>
+                  <li><strong>Local Media</strong>: Upload images or videos from your device for analysis</li>
+                  <li><strong>Live Webcam</strong>: Use your computer's camera for real-time testing</li>
+                  <li><strong>CCTV Cameras</strong>: Connect to surveillance networks (real or simulated)</li>
+                  <li><strong>Drones</strong>: Connect to aerial surveillance feeds (real or simulated)</li>
+                </ul>
+                <p>Note: The Testing section and Search Sources section are mutually exclusive - you can only select one option at a time.</p>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="tutorial-step active">
+                <h3>Step 3: Connect to Devices</h3>
+                <p>When connecting to CCTV or Drone sources:</p>
+                <ul>
+                  <li>Use <strong>Connect</strong> to attempt connection to a real device</li>
+                  <li>Use <strong>Demo Connection</strong> for simulated feeds</li>
+                  <li>Click on a connected device to access the <strong>Disconnect</strong> option</li>
+                </ul>
+                <p>Connected devices will show a status indicator:</p>
+                <ul>
+                  <li>Green dot: Real connection</li>
+                  <li>Blue "DEMO" badge: Simulated connection</li>
+                </ul>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="tutorial-step active">
+                <h3>Step 4: Test Face Recognition</h3>
+                <p>After selecting a search source and uploading reference images:</p>
+                <ul>
+                  <li>Click <strong>Start Detection</strong> to begin face recognition</li>
+                  <li>For Live Webcam, position your face in the camera view</li>
+                  <li>Use the <strong>Show/Hide Landmarks</strong> toggle to view facial detection points</li>
+                </ul>
+                <p>The system will analyze faces and compare them to your reference images.</p>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="tutorial-step active">
+                <h3>Step 5: Review Results</h3>
+                <p>When faces are detected:</p>
+                <ul>
+                  <li>Matches will be highlighted with confidence scores</li>
+                  <li>The match quality indicator shows how reliable the match is</li>
+                  <li>Detailed analysis is available in the debug panel</li>
+                  <li>Match information includes verification level and confidence percentage</li>
+                </ul>
+                <p>If no match is found, the system will indicate "No Match Found" in red.</p>
+              </div>
+            )}
+
+            {currentStep === 5 && (
+              <div className="tutorial-step active">
+                <h3>Step 6: Use the Dashboard & Settings</h3>
+                <p>Access additional features:</p>
+                <ul>
+                  <li><strong>Dashboard</strong>: View analytics, recent searches, and performance metrics</li>
+                  <li><strong>Settings</strong>: Customize the system behavior:</li>
+                  <ul>
+                    <li>Adjust match threshold for stricter or more lenient matching</li>
+                    <li>Enable/disable confidence display</li>
+                    <li>Toggle data augmentation for improved recognition</li>
+                    <li>Manage privacy settings and geolocation</li>
+                  </ul>
+                  <li><strong>Export Data</strong>: Save your search results for external analysis</li>
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="tutorial-navigation">
+            <button
+              className={`tutorial-nav-button ${currentStep === 0 ? 'disabled' : ''}`}
+              onClick={prevStep}
+              disabled={currentStep === 0}
+            >
+              Previous
+            </button>
+
+            {currentStep < totalSteps - 1 ? (
+              <button className="tutorial-nav-button" onClick={nextStep}>
+                Next
+              </button>
+            ) : (
+              <button className="tutorial-close" onClick={onClose}>Got it!</button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -2402,8 +2559,10 @@ const GuardianVision: React.FC = () => {
             Tutorial
           </button>
           <button
-            className="action-button"
+            className={`action-button ${matchHistory.length === 0 ? 'disabled' : ''}`}
             onClick={exportMatchHistory}
+            disabled={matchHistory.length === 0}
+            title={matchHistory.length === 0 ? 'Complete a search first to export data' : 'Export search data as JSON'}
           >
             Export Data
           </button>
@@ -2766,10 +2925,14 @@ const GuardianVision: React.FC = () => {
             <h2>Select Search Sources</h2>
             <div className="sink-options">
               {sinkOptions.map((option) => (
-                <motion.button
-                  key={option.id}
-                  className={`sink-option ${selectedSinks.includes(option.id) ? 'selected' : ''} ${(option.id === 'cctv' && cctvConnected) || (option.id === 'drones' && droneConnected) ? 'connected' : ''}`}
-                  onClick={() => {
+                <div key={option.id} className="sink-option-container">
+                  <motion.button
+                    className={`sink-option
+                      ${selectedSinks.includes(option.id) ? 'selected' : ''}
+                      ${(option.id === 'cctv' && cctvConnected) ? (cctvSimulated ? 'simulated' : 'connected') : ''}
+                      ${(option.id === 'drones' && droneConnected) ? (droneSimulated ? 'simulated' : 'connected') : ''}
+                    `}
+                    onClick={() => {
                     // If this option is already selected, deselect it
                     if (selectedSinks.includes(option.id)) {
                       setSelectedSinks([]);
@@ -2780,18 +2943,26 @@ const GuardianVision: React.FC = () => {
 
                       // Show appropriate settings modal
                       if (option.id === 'cctv') {
+                        // Always show the settings modal, even if already connected
+                        setShowCctvSettings(true);
+                        // If already connected, show a toast notification
                         if (cctvConnected) {
-                          // If already connected, show status
-                          alert('CCTV Camera already connected. Status: Active');
-                        } else {
-                          setShowCctvSettings(true);
+                          if (cctvSimulated) {
+                            addToast('CCTV Camera already connected (SIMULATED). You can disconnect from the settings.', 'info');
+                          } else {
+                            addToast('CCTV Camera already connected. You can disconnect from the settings.', 'info');
+                          }
                         }
                       } else if (option.id === 'drones') {
+                        // Always show the settings modal, even if already connected
+                        setShowDroneSettings(true);
+                        // If already connected, show a toast notification
                         if (droneConnected) {
-                          // If already connected, show status
-                          alert('Drone already connected. Status: Active');
-                        } else {
-                          setShowDroneSettings(true);
+                          if (droneSimulated) {
+                            addToast('Drone already connected (SIMULATED). You can disconnect from the settings.', 'info');
+                          } else {
+                            addToast('Drone already connected. You can disconnect from the settings.', 'info');
+                          }
                         }
                       } else if (option.id === 'local') {
                         // Show local media component
@@ -2805,6 +2976,7 @@ const GuardianVision: React.FC = () => {
                   {option.icon}
                   <span>{option.label}</span>
                 </motion.button>
+                </div>
               ))}
             </div>
           </div>
@@ -3109,13 +3281,43 @@ const GuardianVision: React.FC = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="connect-button"
-                  onClick={connectToCctv}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Connecting...' : 'Connect'}
-                </button>
+                {cctvConnected ? (
+                  <button
+                    className="disconnect-button"
+                    onClick={() => {
+                      setCctvConnected(false);
+                      setCctvSimulated(false);
+                      setShowCctvSettings(false);
+                      setSelectedSinks([]);
+                      addToast('CCTV Camera disconnected', 'info');
+                    }}
+                  >
+                    🔗 Disconnect
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="connect-button"
+                      onClick={() => {
+                        setSimulationMode('real');
+                        connectToCctv();
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing && simulationMode === 'real' ? 'Connecting...' : 'Connect'}
+                    </button>
+                    <button
+                      className="demo-connect-button"
+                      onClick={() => {
+                        setSimulationMode('demo');
+                        connectToCctv();
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing && simulationMode === 'demo' ? 'Connecting...' : 'Demo Connection'}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -3204,13 +3406,43 @@ const GuardianVision: React.FC = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="connect-button"
-                  onClick={connectToDrone}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Connecting...' : 'Connect'}
-                </button>
+                {droneConnected ? (
+                  <button
+                    className="disconnect-button"
+                    onClick={() => {
+                      setDroneConnected(false);
+                      setDroneSimulated(false);
+                      setShowDroneSettings(false);
+                      setSelectedSinks([]);
+                      addToast('Drone disconnected', 'info');
+                    }}
+                  >
+                    🔗 Disconnect
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="connect-button"
+                      onClick={() => {
+                        setSimulationMode('real');
+                        connectToDrone();
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing && simulationMode === 'real' ? 'Connecting...' : 'Connect'}
+                    </button>
+                    <button
+                      className="demo-connect-button"
+                      onClick={() => {
+                        setSimulationMode('demo');
+                        connectToDrone();
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing && simulationMode === 'demo' ? 'Connecting...' : 'Demo Connection'}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
