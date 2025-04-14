@@ -65,7 +65,7 @@
 .logo-text {
   font-size: 1.8rem;
   font-weight: bold;
-  background: linear-gradient(135deg, 
+  background: linear-gradient(135deg,
     rgba(255, 107, 107, 1),
     rgba(72, 52, 212, 1),
     rgba(190, 46, 221, 1),
@@ -102,7 +102,7 @@
 
 .nav-menu {
   display: flex;
-  gap: 1.5rem;    
+  gap: 1.5rem;
 }
 
 .nav-link {
@@ -126,7 +126,7 @@
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, 
+  background: linear-gradient(90deg,
     var(--color-primary),
     var(--color-success)
   );
@@ -258,34 +258,122 @@
   flex: 1;
   min-width: 250px;
   max-width: 300px;
-  padding: 2rem;
+  height: 280px; /* Fixed height for consistency */
+  padding: 1.5rem;
   background: var(--bg-primary);
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
 }
 
-.feature-icon {
-  width: 3rem;
-  height: 3rem;
+.feature-icon-container {
+  width: 5rem !important;
+  height: 5rem !important;
+  min-width: 5rem !important;
+  min-height: 5rem !important;
+  max-width: 5rem !important;
+  max-height: 5rem !important;
+  border-radius: 1rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
-  color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-icon-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.feature-icon {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  color: white !important;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  /* Improved visibility against gradient */
+  stroke-width: 3px !important;
+  opacity: 1;
+}
+
+/* Fix for clock icon to ensure square container */
+.clock-icon {
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+/* Ensure middle feature container is square */
+.middle-feature-container {
+  border-radius: 1rem !important;
+  width: 5rem !important;
+  height: 5rem !important;
+  overflow: hidden;
+}
+
+/* Wrapper for clock icon to ensure it's contained properly */
+.icon-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
 }
 
 .feature-title {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
+  text-align: center;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .feature-description {
   color: var(--text-primary);
   opacity: 0.8;
+  text-align: center;
+  line-height: 1.5;
+  width: 100%;
+  margin: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  font-size: 0.95rem;
+}
+
+.feature-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+  max-height: 160px;
 }
 
 /* Footer styles */
@@ -338,7 +426,7 @@
 .mode-toggle {
   position: fixed;
   top: 6rem;
-  right: 2rem;  
+  right: 2rem;
   width: 3rem;
   height: 3rem;
   display: flex;
@@ -553,9 +641,9 @@
 /* Responsive adjustments */
 @media screen and (max-width: 1024px) {
   .header-container {
-    padding: 1rem;    
+    padding: 1rem;
   }
-  
+
   .nav-menu {
     gap: 1rem;
   }
@@ -565,23 +653,23 @@
   .logo-text {
     font-size: 1.5rem;
   }
-  
+
   .nav-menu {
     gap: 0.5rem;
   }
-  
+
   .nav-link {
     padding: 0.4rem 0.8rem;
   }
-  
+
   .features-grid {
     gap: 1.5rem;
   }
-  
+
   .feature-card {
     min-width: 200px;
   }
-  
+
   .features-title {
     font-size: 2rem;
     margin-bottom: 2rem;
@@ -595,22 +683,22 @@
     text-align: center;
     gap: 1rem;
   }
-  
+
   .logo-container {
     margin-left: -80px;
     justify-content: center;
   }
-  
+
   .nav-menu {
     width: 100%;
     justify-content: center;
   }
-  
+
   .features-grid {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .feature-card {
     width: 100%;
     max-width: 400px;
@@ -670,10 +758,17 @@
 .technology-card {
   background: var(--bg-primary);
   border-radius: 1.5rem;
-  padding: 2rem;
+  padding: 1rem 2rem;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  width: 280px; /* Standardized width */
+  height: 240px; /* Standardized height */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .technology-card:hover {
@@ -683,11 +778,17 @@
 }
 
 .technology-icon-container {
-  width: 6rem;
-  height: 6rem;
-  margin: 0 auto 1rem;
+  width: 6rem !important;
+  height: 6rem !important;
+  min-width: 6rem !important;
+  min-height: 6rem !important;
+  max-width: 6rem !important;
+  max-height: 6rem !important;
+  margin: 0 auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   background: var(--card-bg);
-  border-radius: 50%;
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -709,14 +810,53 @@
   opacity: 0.2;
 }
 
+.technology-icon {
+  width: 3rem !important;
+  height: 3rem !important;
+  min-width: 3rem !important;
+  min-height: 3rem !important;
+  max-width: 3rem !important;
+  max-height: 3rem !important;
+  color: white !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  stroke-width: 2px !important;
+}
+
+.technology-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: center;
+  flex-grow: 1;
+  margin-top: auto;
+}
+
 .technology-name {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+  word-wrap: break-word;
+  line-height: 1.4;
+  text-align: center;
+  min-height: 3.5rem; /* Ensure consistent height for 1 or 2 lines */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media screen and (max-width: 768px) {
+  .technology-icon {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    max-width: 2.5rem !important;
+    max-height: 2.5rem !important;
+  }
   .technologies-grid {
     gap: 2rem;
     padding: 1rem 0;
@@ -728,35 +868,55 @@
 
   .technology-card {
     scroll-snap-align: center;
-    min-width: 150px;
+    width: 240px;
+    height: 220px;
   }
 
   .technology-icon-container {
-    width: 5rem;
-    height: 5rem;
+    width: 5rem !important;
+    height: 5rem !important;
+    min-width: 5rem !important;
+    min-height: 5rem !important;
+    max-width: 5rem !important;
+    max-height: 5rem !important;
   }
 
   .technology-name {
     font-size: 1.1rem;
+    min-height: 3rem;
   }
 }
 
 @media screen and (max-width: 480px) {
+  .technology-icon {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+  }
   .technologies-grid {
     gap: 1.5rem;
   }
 
   .technology-card {
-    min-width: 120px;
+    width: 200px;
+    height: 200px;
   }
 
   .technology-icon-container {
-    width: 4rem;
-    height: 4rem;
+    width: 4rem !important;
+    height: 4rem !important;
+    min-width: 4rem !important;
+    min-height: 4rem !important;
+    max-width: 4rem !important;
+    max-height: 4rem !important;
   }
 
   .technology-name {
     font-size: 1rem;
+    min-height: 2.8rem;
   }
 }
 
