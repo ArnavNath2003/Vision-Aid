@@ -103,8 +103,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
 
         const navigationMatch = response.match(/navigate:\/(\w+)/);
         if (navigationMatch) {
-          const route = navigationMatch[1];
-          const displayMessage = response.replace(/navigate:\/\w+/, '').trim();
+          let route = navigationMatch[1];
+          // Handle cases where the route might contain spaces (e.g., "project 1")
+          route = route.replace(/\s+/g, '');
+          const displayMessage = response.replace(/navigate:\/[\w-]+/, '').trim();
           setMessages(prev => [...prev, { text: displayMessage, sender: 'bot' }]);
           setTimeout(() => {
             // Handle plural variations of routes
@@ -112,22 +114,40 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
             const routeMapping: { [key: string]: string } = {
               'project': 'projects',
               'projects': 'projects',
+              'project1': 'projects/urban-traffic-dynamics',
+              'project2': 'projects/guardian-vision',
+              'project-1': 'projects/urban-traffic-dynamics',
+              'project-2': 'projects/guardian-vision',
+              'project_1': 'projects/urban-traffic-dynamics',
+              'project_2': 'projects/guardian-vision',
               'contact': 'contact',
               'contacts': 'contact',
               'home': '',
               'homepage': '',
               'main': '',
-              'about': 'about'
+              'about': 'about',
+              'urbantraffic': 'projects/urban-traffic-dynamics',
+              'urban': 'projects/urban-traffic-dynamics',
+              'traffic': 'projects/urban-traffic-dynamics',
+              'urbantrafic': 'projects/urban-traffic-dynamics',
+              'urbantraficdinamics': 'projects/urban-traffic-dynamics',
+              'urbantrafficdynamics': 'projects/urban-traffic-dynamics',
+              'guardian': 'projects/guardian-vision',
+              'guardianvision': 'projects/guardian-vision',
+              'vision': 'projects/guardian-vision',
+              'guard': 'projects/guardian-vision'
             };
-            
+
             const finalRoute = routeMapping[routePath];
             if (finalRoute !== undefined) {
+              // Scroll to top before navigation
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               navigate(finalRoute ? `/${finalRoute}` : '/');
             } else {
               // Handle unknown routes
-              setMessages(prev => [...prev, { 
-                text: "I'm not sure about that page. Available pages are: Home, Projects, About, and Contact.", 
-                sender: 'bot' 
+              setMessages(prev => [...prev, {
+                text: "I'm not sure about that page. Available pages are: Home, Projects (including Urban Traffic Dynamics and Guardian Vision), About, and Contact.",
+                sender: 'bot'
               }]);
             }
           }, 1000);
@@ -167,8 +187,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Make sure onClick is using onCloseWithAnimation */}
-      <div 
-        className={`chatbot-backdrop ${isOpen ? 'open' : ''}`} 
+      <div
+        className={`chatbot-backdrop ${isOpen ? 'open' : ''}`}
         onClick={onCloseWithAnimation}
       />
       <div className={`chatbot-window ${isOpen ? 'open' : ''} ${isClosing ? 'closing' : ''}`}>
@@ -210,4 +230,4 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default Chatbot; 
+export default Chatbot;

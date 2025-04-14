@@ -376,7 +376,7 @@ const About: React.FC = () => {
             >
               <div className="member-avatar"></div>
               <h3>Saksham Jain</h3>
-              <p>Backend Developer</p>
+              <p>AI Engineer</p>
             </motion.div>
 
             <motion.div 

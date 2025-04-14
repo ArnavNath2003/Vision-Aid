@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
+import {
   Globe, Sun, Moon, ArrowRight, Network,
   Layers, Bolt, Lightbulb, TrendingUp,
   Search
@@ -10,6 +10,8 @@ import {
 import * as THREE from 'three';
 import './Projects.css';
 import Chatbot from './Chatbot';
+import ProjectDetailsModal from './projects/ProjectDetailsModal';
+import SuggestProjectModal from './projects/SuggestProjectModal';
 import { useLocation } from 'react-router-dom';
 import Masonry from 'react-masonry-css';
 
@@ -32,8 +34,9 @@ interface Project {
 const Projects: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  
+
   const chatbotImageUrl = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png";
 
   useEffect(() => {
@@ -45,10 +48,10 @@ const Projects: React.FC = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
+    const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current as HTMLCanvasElement,
       alpha: true,
-      antialias: true 
+      antialias: true
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -59,7 +62,7 @@ const Projects: React.FC = () => {
 
     // Enhanced lighting
     const ambientLight = new THREE.AmbientLight(
-      isDarkMode ? 0x404040 : 0xffffff, 
+      isDarkMode ? 0x404040 : 0xffffff,
       isDarkMode ? 0.5 : 0.7
     );
     scene.add(ambientLight);
@@ -72,13 +75,13 @@ const Projects: React.FC = () => {
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 500;
     const posArray = new Float32Array(particlesCount * 3);
-    
+
     for (let i = 0; i < particlesCount * 3; i++) {
       posArray[i] = (Math.random() - 0.5) * 50;
     }
-    
+
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    
+
     const particlesMaterial = new THREE.PointsMaterial({
       size: 0.05,
       color: isDarkMode ? 0x4fc3f7 : 0x2962ff,
@@ -86,7 +89,7 @@ const Projects: React.FC = () => {
       opacity: 0.8,
       sizeAttenuation: true
     });
-    
+
     const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
     scene.add(particlesMesh);
 
@@ -102,10 +105,10 @@ const Projects: React.FC = () => {
       // Rotate particles slowly
       particlesMesh.rotation.y = time * 0.05;
       particlesMesh.rotation.x = time * 0.025;
-      
+
       // Create subtle wave effect
       particlesMesh.position.y = Math.sin(time) * 0.2;
-      
+
       // Subtle camera movement
       camera.position.x = Math.sin(time * 0.2) * 0.5;
       camera.position.y = Math.cos(time * 0.2) * 0.5;
@@ -120,10 +123,10 @@ const Projects: React.FC = () => {
     const handleResize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      
+
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
@@ -149,7 +152,7 @@ const Projects: React.FC = () => {
 
   const Header = () => {
     const location = useLocation(); // Get current route path
-  
+
     return (
       <header className="header">
         <div className="header-container">
@@ -178,8 +181,8 @@ const Projects: React.FC = () => {
           <h3 className="footer-title">VisionAid</h3>
           <p>Transforming urban infrastructure through intelligent technology.</p>
           <div className="social-icons">
-            <a 
-              href="https://github.com/ArnavNath2003/Vision-Aid" 
+            <a
+              href="https://github.com/ArnavNath2003/Vision-Aid"
               className="social-icon"
               target="_blank"
               rel="noopener noreferrer"
@@ -208,8 +211,8 @@ const Projects: React.FC = () => {
         <div className="footer-section">
           <h4 className="footer-title">Newsletter</h4>
           <div className="newsletter-form">
-            <input 
-              type="email" 
+            <input
+              type="email"
               placeholder="Enter your email"
               className="newsletter-input"
             />
@@ -233,7 +236,7 @@ const Projects: React.FC = () => {
       description: "Revolutionizing urban mobility through AI-powered traffic optimization, reducing congestion by up to 35% in pilot cities.",
       icon: <Network className="project-icon" />,
       color: "primary",
-      technologies: ["TensorFlow", "Computer Vision", "IoT Sensors", "Cloud Computing"],
+      technologies: ["YOLOv8", "Computer Vision", "TensorFlow", "Real-time Detection", "Traffic Analysis", "React"],
       features: [
         "Real-time traffic flow optimization",
         "Predictive congestion management",
@@ -242,9 +245,9 @@ const Projects: React.FC = () => {
       ],
       status: "active",
       metrics: [
-        { value: "35%", label: "Congestion Reduction" },
-        { value: "12M+", label: "Daily Commuters" },
-        { value: "5", label: "Pilot Cities" }
+        { value: "23%", label: "Congestion Reduction" },
+        { value: "8.5M+", label: "Daily Commuters" },
+        { value: "3", label: "Pilot Cities" }
       ],
       image: "/images/traffic-system.jpg",
       liveUrl: true,
@@ -254,10 +257,10 @@ const Projects: React.FC = () => {
       id: "guardian-vision",
       title: "Guardian Vision",
       category: "ai",
-      description: "AI-powered facial recognition system for locating missing persons through multi-source surveillance integration, including CCTV networks, drones, and real-time video feeds.",
+      description: "AI-powered facial recognition system for locating missing persons through multi-source surveillance integration, including CCTV networks and real-time video feeds.",
       icon: <Search className="project-icon" />,
       color: "success",
-      technologies: ["TensorFlow.js", "OpenCV", "WebRTC", "Geo-Location API", "Face-API.js"],
+      technologies: ["Facial Recognition", "SSD Detection", "TensorFlow.js", "WebRTC", "React", "Multi-source Analysis"],
       features: [
         "Multi-source video processing",
         "Real-time facial recognition",
@@ -267,9 +270,9 @@ const Projects: React.FC = () => {
       ],
       status: "active",
       metrics: [
-        { value: "98%", label: "Recognition Accuracy" },
-        { value: "0.5s", label: "Processing Time" },
-        { value: "5+", label: "Input Sources" }
+        { value: "78%", label: "Recognition Accuracy" },
+        { value: "1.2s", label: "Processing Time" },
+        { value: "3+", label: "Input Sources" }
       ],
       image: "/images/guardian-vision.jpg",
       liveUrl: true,
@@ -277,12 +280,16 @@ const Projects: React.FC = () => {
     },
     // Add more projects with varying heights
   ];
-  
+
   const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
     const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleTryNow = (e: React.MouseEvent) => {
       e.stopPropagation();
+      // Scroll to top before navigation
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
       if (project.id === "urban-traffic") {
         navigate('/projects/urban-traffic-dynamics');
       } else if (project.id === "guardian-vision") {
@@ -290,70 +297,66 @@ const Projects: React.FC = () => {
       }
     };
 
+    const handleViewDetails = () => {
+      setIsModalOpen(true);
+    };
+
     return (
       <motion.div
         className="project-masonry-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ 
+        whileHover={{
           y: -5, // Reduced hover lift
           transition: { duration: 0.3, ease: "easeOut" }
         }}
         transition={{ duration: 0.3 }}
       >
         <div className="project-card-content">
-          <div className="project-header">
-            <div className="project-header-main">
-              <div className={`project-icon-container ${project.color}`}>
-                {project.icon}
+          <div className="project-top-content">
+            <div className="project-header">
+              <div className="project-header-main">
+                <div className={`project-icon-container ${project.color}`}>
+                  {project.icon}
+                </div>
+                <h3 className="project-title">{project.title}</h3>
               </div>
-              <h3 className="project-title">{project.title}</h3>
+              <div className={`project-status ${project.status}`}>
+                <span className="status-dot" />
+                {project.status === 'active' ? 'Active' : 'Inactive'}
+              </div>
             </div>
-            <div className={`project-status ${project.status}`}>
-              <span className="status-dot" />
-              {project.status === 'active' ? 'Active' : 'Inactive'}
-            </div>
-          </div>
 
-          <p className="project-description">{project.description}</p>
-          
-          {project.image && (
-            <motion.div 
-              className="project-image-wrapper"
-              whileHover={{ scale: 1.03 }} // Reduced scale effect
-            >
-              <img 
-                src={project.image} 
-                alt={project.title}
-                className="project-image"
-              />
-            </motion.div>
-          )}
-          
-          <div className="tech-tags">
-            {project.technologies.map((tech, index) => (
-              <motion.span 
-                key={index} 
-                className="tech-badge"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                {tech}
-              </motion.span>
-            ))}
+            <p className="project-description">{project.description}</p>
+
+            {/* Image placeholder removed as requested */}
+
+            <div className="tech-tags">
+              {project.technologies.slice(0, 6).map((tech, index) => (
+                <motion.span
+                  key={index}
+                  className="tech-badge"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  {tech}
+                </motion.span>
+              ))}
+            </div>
           </div>
 
           <div className="button-container">
-            <motion.button 
+            <motion.button
               className="view-details-button"
+              onClick={handleViewDetails}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               View Details
             </motion.button>
             {project.liveUrl && (
-              <motion.button 
+              <motion.button
                 className="try-now-button"
                 onClick={handleTryNow}
                 whileHover={{ scale: 1.02 }}
@@ -364,41 +367,59 @@ const Projects: React.FC = () => {
             )}
           </div>
         </div>
+        {isModalOpen && (
+          <ProjectDetailsModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            project={project}
+          />
+        )}
       </motion.div>
     );
   };
 
+  // Use useRef to track if benefits have been animated
+  const benefitsAnimated = useRef(false);
+
   const ProjectBenefits = () => {
+    const [hasAnimated, setHasAnimated] = useState(benefitsAnimated.current);
+
+    // Set the ref to true after animation completes
+    const handleAnimationComplete = () => {
+      benefitsAnimated.current = true;
+      setHasAnimated(true);
+    };
+
     const benefits = [
       {
         icon: <TrendingUp className="benefit-icon" />,
-        title: "Traffic Flow Optimization",
-        description: "Reduce congestion & improve commute times by dynamically adjusting traffic signals."
+        title: "Real-time Analysis",
+        description: "Process video feeds in real-time for immediate detection and response capabilities."
       },
       {
         icon: <Layers className="benefit-icon" />,
-        title: "Proactive Infrastructure Maintenance",
-        description: "Early detection of structural issues prevents failures & ensures timely repairs."
+        title: "Multi-source Integration",
+        description: "Seamlessly connect to various video sources including CCTV, drones, and webcams."
       },
       {
         icon: <Lightbulb className="benefit-icon" />,
-        title: "Data-Driven Urban Planning",
-        description: "Insights for informed city planning & efficient resource allocation."
+        title: "Advanced AI Models",
+        description: "Leverage cutting-edge computer vision and facial recognition technologies."
       },
       {
         icon: <Bolt className="benefit-icon" />,
-        title: "Scalable & Collaborative",
-        description: "Solutions designed for government collaboration & easy integration."
+        title: "Accessible & User-friendly",
+        description: "Intuitive interfaces designed for both technical and non-technical users."
       }
     ];
 
     return (
       <motion.section
         className="project-benefits-section"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
+        initial={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
+        onAnimationComplete={handleAnimationComplete}
       >
         <h2 className="benefits-heading">Project Benefits</h2>
         <div className="benefits-container">
@@ -406,8 +427,14 @@ const Projects: React.FC = () => {
             <motion.div
               key={index}
               className="benefit-card"
+              initial={hasAnimated ? { opacity: 1 } : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                delay: hasAnimated ? 0 : index * 0.1
+              }}
               whileHover={{ y: -10 }}
-              transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="benefit-icon-container">
                 {benefit.icon}
@@ -433,28 +460,28 @@ const Projects: React.FC = () => {
     <div className={isDarkMode ? 'dark-mode' : 'light-mode'}>
       <canvas ref={canvasRef} className="canvas-container" />
       <Header />
-      
+
       <button
         className="chatbot-toggle"
         onClick={() => setIsChatOpen(true)}
       >
         <img src={chatbotImageUrl} alt="Chatbot" />
       </button>
-      
+
       <Chatbot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
       />
-      
+
       <main className="projects-container">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           className="projects-hero"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h1 
+          <motion.h1
             className="projects-title"
             initial={{ y: -50 }}
             animate={{ y: 0 }}
@@ -462,7 +489,7 @@ const Projects: React.FC = () => {
           >
             Our Innovation Portfolio
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="projects-subtitle"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -488,7 +515,7 @@ const Projects: React.FC = () => {
         <ProjectBenefits />
 
         {/* Call To Action */}
-        <motion.section 
+        <motion.section
           className="projects-cta"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -504,15 +531,24 @@ const Projects: React.FC = () => {
               <button className="cta-button primary">
                 Become a Partner
               </button>
-              <button className="cta-button secondary">
+              <button
+                className="cta-button secondary"
+                onClick={() => setIsSuggestModalOpen(true)}
+              >
                 Suggest a Project
               </button>
             </div>
           </div>
         </motion.section>
       </main>
-      
+
       <Footer />
+
+      {/* Suggest Project Modal */}
+      <SuggestProjectModal
+        isOpen={isSuggestModalOpen}
+        onClose={() => setIsSuggestModalOpen(false)}
+      />
     </div>
   );
 };

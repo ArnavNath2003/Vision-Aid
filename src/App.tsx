@@ -5,11 +5,13 @@ import About from './components/About';
 import Contact from './components/Contact';
 import UrbanTrafficDynamics from './components/projects/UrbanTrafficDynamics';
 import GuardianVision from './components/projects/GuardianVision';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<VisionAidHomepage />} />
         <Route path="/projects" element={<Projects />} />
