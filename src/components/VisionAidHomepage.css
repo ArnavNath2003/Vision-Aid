@@ -25,7 +25,7 @@
   --bg-primary: #f0f8ff;
   --text-primary: #1a202c;
   --header-bg: rgba(255, 255, 255, 0.7);
-  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.9);
   --card-border: rgba(0, 0, 0, 0.1);
   --card-hover-border: rgba(0, 0, 0, 0.2);
   --card-shadow: rgba(0, 0, 0, 0.1);
@@ -260,9 +260,10 @@
   max-width: 300px;
   height: 280px; /* Fixed height for consistency */
   padding: 1.5rem;
-  background: var(--bg-primary);
+  background: var(--card-bg);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px var(--card-shadow);
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -274,6 +275,8 @@
 
 .feature-card:hover {
   transform: translateY(-5px);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 20px var(--card-shadow);
 }
 
 .feature-icon-container {
@@ -756,12 +759,12 @@
 }
 
 .technology-card {
-  background: var(--bg-primary);
+  background: var(--card-bg);
   border-radius: 1.5rem;
   padding: 1rem 2rem;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px var(--card-shadow);
   width: 280px; /* Standardized width */
   height: 240px; /* Standardized height */
   text-align: center;
@@ -774,7 +777,7 @@
 .technology-card:hover {
   transform: translateY(-10px);
   border-color: var(--color-primary);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 40px var(--card-shadow);
 }
 
 .technology-icon-container {
@@ -787,7 +790,7 @@
   margin: 0 auto;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  background: var(--card-bg);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-success));
   border-radius: 50% !important;
   display: flex;
   align-items: center;
@@ -849,6 +852,18 @@
 }
 
 @media screen and (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .feature-card {
+    max-width: 100%;
+  }
+
+  .features-title {
+    font-size: 2rem;
+  }
   .technology-icon {
     width: 2.5rem !important;
     height: 2.5rem !important;
@@ -888,6 +903,35 @@
 }
 
 @media screen and (max-width: 480px) {
+  .newsletter-form {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .newsletter-input,
+  .newsletter-button {
+    width: 100%;
+  }
+  .hero-content {
+    padding: 1rem;
+  }
+
+  .main-heading {
+    font-size: 2.5rem;
+  }
+
+  .sub-heading {
+    font-size: 1.2rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero-button {
+    width: 100%;
+  }
   .technology-icon {
     width: 2rem !important;
     height: 2rem !important;
