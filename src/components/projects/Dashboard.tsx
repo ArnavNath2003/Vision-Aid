@@ -524,7 +524,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onClose, processedFaces, m
       <div className="debug-stats" style={{
         position: 'fixed',
         bottom: '20px',
-        right: isLocationEnabled ? '290px' : '20px', /* Position to the left of location indicator when it's visible */
+        right: isLocationEnabled ? '230px' : '20px', /* Position right next to the location indicator when it's visible */
         background: 'rgba(30, 30, 30, 0.85)',
         padding: '12px',
         borderRadius: '8px',

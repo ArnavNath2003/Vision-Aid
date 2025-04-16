@@ -11,14 +11,16 @@
 .toast {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 300px;
-  max-width: 400px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  min-width: 320px;
+  max-width: 420px;
   animation: slideIn 0.3s ease-out forwards;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin-bottom: 4px;
 }
 
 .toast.fade-out {
@@ -26,8 +28,10 @@
 }
 
 .toast-success {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(3, 169, 244, 0.9));
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 0.9));
   color: white;
+  border-left: 4px solid rgba(46, 204, 113, 1);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
 }
 
 .toast-error {
@@ -46,15 +50,20 @@
 }
 
 .toast-icon {
-  margin-right: 12px;
+  margin-right: 14px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
 }
 
 .toast-message {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
 }
 
 .toast-close {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Toast.css';
-import { CheckCircle, AlertCircle, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, X, Info, AlertTriangle } from 'lucide-react';
 
 interface ToastProps {
   message: string;
@@ -11,7 +11,7 @@ interface ToastProps {
 
 const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3500 }) => {
   const [isFading, setIsFading] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   // Start the fade-out animation before closing
   const startFadeOut = () => {
@@ -38,13 +38,13 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3500 }
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle size={18} />;
+        return <CheckCircle size={20} />;
       case 'error':
-        return <AlertCircle size={18} />;
+        return <AlertCircle size={20} />;
       case 'info':
-        return <AlertCircle size={18} />;
+        return <Info size={20} />;
       case 'warning':
-        return <AlertCircle size={18} />;
+        return <AlertTriangle size={20} />;
       default:
         return null;
     }

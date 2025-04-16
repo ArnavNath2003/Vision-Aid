@@ -3633,3 +3633,61 @@
   from { opacity: 1; transform: translateY(0); }
   to { opacity: 0; transform: translateY(-10px); }
 }
+
+/* Styles for the location address display */
+.location-address {
+  margin-top: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
+  min-height: 60px; /* Set a minimum height to prevent layout shifts */
+}
+
+.location-address.loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  transition: opacity 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.loading-icon {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.address-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.address-row:last-child {
+  margin-bottom: 0;
+}
+
+.address-label {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.address-value {
+  font-weight: 500;
+  text-align: right;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

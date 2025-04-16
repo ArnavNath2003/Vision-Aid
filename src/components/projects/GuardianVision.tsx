@@ -184,15 +184,27 @@ const GuardianVision: React.FC = () => {
         // Set up continuous tracking
         watchId = navigator.geolocation.watchPosition(
           (position) => {
-            setCurrentLocation(position);
-            const now = new Date();
-            setLocationUpdateTime(now.toLocaleTimeString());
+            // Check if position has changed significantly before updating state
+            const hasSignificantChange = !currentLocation ||
+              Math.abs(position.coords.latitude - currentLocation.coords.latitude) > 0.0001 ||
+              Math.abs(position.coords.longitude - currentLocation.coords.longitude) > 0.0001;
+
+            if (hasSignificantChange) {
+              console.log('Significant position change detected, updating location');
+              setCurrentLocation(position);
+              const now = new Date();
+              setLocationUpdateTime(now.toLocaleTimeString());
+            }
           },
           (error) => {
             console.error('Geolocation tracking error:', error);
             setGeoStatus('error');
           },
-          { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
+          {
+            enableHighAccuracy: true,
+            maximumAge: 60000, // Use cached position if less than 1 minute old
+            timeout: 30000     // Allow 30 seconds to get a new position
+          }
         );
 
         console.log('Geolocation tracking started');
@@ -202,12 +214,10 @@ const GuardianVision: React.FC = () => {
       }
     } else {
       setGeoStatus('inactive');
-      if (currentLocation) {
-        // Clear location data when disabled
-        setCurrentLocation(null);
-        setLocationUpdateTime('');
-        console.log('Geolocation disabled, location data cleared');
-      }
+      // Always clear location data when disabled, regardless of current state
+      setCurrentLocation(null);
+      setLocationUpdateTime('');
+      console.log('Geolocation disabled, location data cleared');
     }
 
     // Cleanup function to stop tracking when component unmounts or setting changes
@@ -217,7 +227,7 @@ const GuardianVision: React.FC = () => {
         console.log('Geolocation tracking stopped');
       }
     };
-  }, [geolocationEnabled, currentLocation]);
+  }, [geolocationEnabled]); // Only depend on whether geolocation is enabled, not the current location
 
   // Video styling is now applied directly in the JSX
 
@@ -1129,6 +1139,9 @@ const GuardianVision: React.FC = () => {
       // Reset the pending images and ready flag after processing
       setPendingImages([]);
       setImagesReadyToProcess(false);
+
+      // Show success toast notification
+      addToast(`Successfully processed ${fileCount} reference ${fileCount === 1 ? 'image' : 'images'}`, 'success');
 
       console.log('Reference images processed successfully');
     } catch (error) {
