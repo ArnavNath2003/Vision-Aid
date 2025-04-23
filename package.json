@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -10,6 +11,7 @@
     "preview": "vite preview",
     "start": "vite"
   },
+  
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@types/three": "^0.174.0",

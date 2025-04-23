@@ -475,4 +475,41 @@
 .dark-mode .analyze-button:hover {
   background: linear-gradient(135deg, #1E88E5, #1565C0);
 }
+/* next to your existing .play-button rules */
+.analyze-video-button {
+  padding: 0.5rem 1rem;
+  margin-left: 1rem;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.analyze-video-button:hover {
+  background-color: #0056b3;
+}
+/* Shared styling for both buttons */
+.play-button,
+.analyze-video-button {
+  padding: 0.5rem 1rem;
+  margin-left: 1rem;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
 
+/* Remove extra left‐margin on the very first button if you want */
+.play-button:first-of-type {
+  margin-left: 0;
+}
+
+.play-button:hover,
+.analyze-video-button:hover {
+  background-color: #0056b3;
+}
